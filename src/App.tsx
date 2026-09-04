@@ -1,0 +1,34 @@
+// src/App.tsx
+
+import { useState } from 'react'
+import { useLocation, Link, Outlet } from 'react-router-dom'
+
+function App() {
+  const location = useLocation()
+  const headerClass = location.pathname === '/' ? 'header entrance' : 'header'
+  const [coverClass] = useState(() => {
+    return Math.floor(Math.random() * 2) === 0 ? 'cover is-image-1' : 'cover is-image-2'
+  })
+
+  return (
+    <>
+      <header className={headerClass}>
+        <h1 className="sitebrand">
+          <Link to="/">
+            <span className="sitebrand__title">RPG.LOGIC DEMO</span>
+            <span className="sitebrand__tagline">TypeScriptで複雑なRPG戦闘ロジックの再現に挑む</span>
+          </Link>
+        </h1>
+      </header>
+      <main className="main">
+        <Outlet />
+      </main>
+      <div className={coverClass}></div>
+      <footer className="footer">
+        <small>&copy; 2026 QWEL.DESIGN</small>
+      </footer>
+    </>
+  )
+}
+
+export default App
