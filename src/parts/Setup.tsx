@@ -3,7 +3,7 @@
 import { useParams, Link } from 'react-router-dom'
 import List from './Sheets/List'
 import Detail from './Sheets/Detail'
-import { SAMPLE_CHARACTERS as samples } from '../domains/Character/index'
+import { SAMPLE_CHARACTERS as samples } from '../domains/Sample/index'
 
 function Setup() {
   // uid があれば1人のサンプルを探す
