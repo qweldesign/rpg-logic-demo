@@ -27,12 +27,12 @@ function List({ units }: { units: Character[] }) {
             <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`./${String(unit.id).padStart(2, '0')}/`)}>
               <td>{unit.id}</td>
               <td>{unit.name}</td>
-              <td>{`${unit.parameters.getLevel('筋力')} (${unit.parameters.get('筋力')}CP)`}</td>
-              <td>{`${unit.parameters.getLevel('敏捷力')} (${unit.parameters.get('敏捷力')}CP)`}</td>
-              <td>{`${unit.parameters.getLevel('知力')} (${unit.parameters.get('知力')}CP)`}</td>
-              <td>{`${unit.parameters.getLevel('生命力')} (${unit.parameters.get('生命力')}CP)`}</td>
-              <td>{unit.parameters.total}</td>
-              <td>{`${unit.equipments.weapon.name}`} / {unit.equipments.shield?.name || ''}{unit.equipments.shield ? ' /' : ''} {unit.equipments.armor.name}</td>
+              <td>{`${unit.getLevel('筋力')} (${unit.get('筋力')}CP)`}</td>
+              <td>{`${unit.getLevel('敏捷力')} (${unit.get('敏捷力')}CP)`}</td>
+              <td>{`${unit.getLevel('知力')} (${unit.get('知力')}CP)`}</td>
+              <td>{`${unit.getLevel('生命力')} (${unit.get('生命力')}CP)`}</td>
+              <td>{unit.total}</td>
+              <td>{`${unit.weapon.name}`} / {unit.shield?.name || ''}{unit.shield ? ' /' : ''} {unit.armor.name}</td>
             </tr>
           ))}
         </tbody>

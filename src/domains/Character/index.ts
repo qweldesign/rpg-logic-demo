@@ -50,8 +50,8 @@ const SAMPLE_MODELS: CharacterModel[] = [
 export class Character {
   public id: number
   public name: string
-  public parameters: Parameters
-  public equipments: Equipments
+  private parameters: Parameters
+  private equipments: Equipments
 
   constructor(model: CharacterModel) {
     this.id = model.id
