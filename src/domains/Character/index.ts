@@ -11,7 +11,7 @@ export type CharacterModel = {
   name: string
   abilities: Point[]
   skills: [ParameterKey, Point][]
-  equipments: [WeaponKey, ShieldKey | null, ArmorKey]
+  equipments: [WeaponKey, ShieldKey | null, ArmorKey] | []
 }
 
 // サンプル・モデル
@@ -35,14 +35,14 @@ const SAMPLE_MODELS: CharacterModel[] = [
     name: 'アシュリン',
     abilities: [0, 1, 4, 1], // 知力高めの魔術師タイプ
     skills: [['赤の魔法', 2], ['緑の魔法', 2]],
-    equipments: ['戦棍', '小盾', '革服']
+    equipments: ['細剣', '小盾', '革服']
   },
   {
     id: 4,
     name: 'ステファニー',
-    abilities: [2, 0, 4, 1], // 筋力, 知力高めの魔法戦士タイプ
+    abilities: [2, 1, 4, 0], // 筋力, 知力高めの魔法戦士タイプ
     skills: [['武術', 1], ['青の魔法', 2]],
-    equipments: ['細剣', '小盾', 'チェインメイル']
+    equipments: ['長杖', null, 'チェインメイル']
   }
 ]
 
@@ -58,7 +58,7 @@ export class Character {
     this.name = model.name
     this.parameters = new Parameters(model.abilities)
     model.skills.forEach(([name, point]) => this.set(name, point))
-    this.equipments = new Equipments(...model.equipments)
+    this.equipments = model.equipments.length ? new Equipments(...model.equipments) : new Equipments()
   }
 
   // name と point を指定し, パラメータをセット
