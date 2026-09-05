@@ -9,7 +9,7 @@ type CharacterModel = {
   name: string
   abilities: Point[]
   skills: [ParameterKey, Point][]
-  equipments: [WeaponKey, ShieldKey | null, ArmorKey]
+  equipments: [WeaponKey, ShieldKey | null, ArmorKey] | []
 }
 
 // サンプル・モデル
@@ -56,7 +56,7 @@ export class Character {
     this.name = model.name
     this.parameters = new Parameters(model.abilities)
     model.skills.forEach(([name, point]) => this.parameters.set(name, point))
-    this.equipments = new Equipments(...model.equipments)
+    this.equipments = model.equipments.length ? new Equipments(...model.equipments) : new Equipments()
   }
 }
 
