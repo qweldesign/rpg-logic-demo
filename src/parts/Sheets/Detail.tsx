@@ -33,7 +33,7 @@ function Detail({ unit }: { unit: Character }) {
       <div className="w-1/1 max-w-2xl">
         <h4 className="mt-12 mb-6 font-serif italic text-lg before:content-['-'] before:pe-3">Skills</h4>
         <div className="table-wrapper">
-          <div className="grid grid-cols-[50%_50%] w-2xl mt-6 mb-24 border-t border-white">
+          <div className="grid grid-cols-[50%_50%] w-2xl my-6 border-t border-white">
             {unit.parameters.skills.map((skill, i) => (
               <div className="grid grid-cols-[32%_16%_32%_20%]" key={i}>
                 <div className="cell">{skill.name}</div><div className="cell">{skill.level}</div><div className="cell">{skill.point}CP</div><div className="cell">&nbsp;</div>
@@ -44,6 +44,21 @@ function Detail({ unit }: { unit: Character }) {
                 <div className="cell">&nbsp;</div><div className="cell">&nbsp;</div><div className="cell">&nbsp;</div><div className="cell">&nbsp;</div>
               </div>
             )}
+          </div>
+        </div>
+        <h4 className="mt-12 mb-6 font-serif italic text-lg before:content-['-'] before:pe-3">Equipments</h4>
+        <div className="table-wrapper">
+          <div className="grid grid-cols-[30%_70%] w-2xl my-6 border-t border-white">
+            <div className="cell">{unit.equipments.weapon.name}</div>
+            <div className="cell">{`Dmg: ${unit.equipments.getDmgName(0)}`}</div>
+            {unit.equipments.shield && (
+              <>
+                <div className="cell">{unit.equipments.shield.name}</div>
+                <div className="cell">&nbsp;</div>
+              </>
+            )}
+            <div className="cell">{unit.equipments.armor.name}</div>
+            <div className="cell">{`DR: ${unit.equipments.getDRName()}`}</div>
           </div>
         </div>
       </div>
