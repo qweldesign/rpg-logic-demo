@@ -18,6 +18,7 @@ function List({ units }: { units: Character[] }) {
             <th>DX (敏捷力)</th>
             <th>IN (知力)</th>
             <th>HT (生命力)</th>
+            <th>装備</th>
             <th>CP総計</th>
           </tr>
         </thead>
@@ -30,6 +31,7 @@ function List({ units }: { units: Character[] }) {
               <td>{unit.parameters.getLevel('敏捷力')} ({unit.parameters.get('敏捷力')}CP)</td>
               <td>{unit.parameters.getLevel('知力')} ({unit.parameters.get('知力')}CP)</td>
               <td>{unit.parameters.getLevel('生命力')} ({unit.parameters.get('生命力')}CP)</td>
+              <td>{unit.equipments.weapon.name} / {unit.equipments.shield?.name || ''}{unit.equipments.shield ? ' /' : ''} {unit.equipments.armor.name}</td>
               <td>{unit.parameters.total}</td>
             </tr>
           ))}
