@@ -146,4 +146,9 @@ export class Parameters {
     return this.params
       .filter(p => p.base !== null)
   }
+
+  // Model用データに変換
+  get model(): Point[] {
+    return PARAMETER_KEYS.map(key => this.get(key))
+  }
 }
