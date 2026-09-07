@@ -46,6 +46,21 @@ function Detail({ unit }: { unit: Character }) {
             )}
           </div>
         </div>
+        <h4 className="mt-12 mb-6 font-serif italic text-lg before:content-['-'] before:pe-3">Equipments</h4>
+        <div className="table-wrapper">
+          <div className="grid grid-cols-[30%_70%] w-2xl my-6 border-t border-white">
+            <div className="cell">{unit.equipments.weapon.name}</div>
+            <div className="cell">Dmg: {unit.equipments.getDmgName(0)}</div>
+            {unit.equipments.shield.size !== 0 && (
+              <>
+                <div className="cell">{unit.equipments.shield.name}</div>
+                <div className="cell">&nbsp;</div>
+              </>
+            )}
+            <div className="cell">{unit.equipments.armor.name}</div>
+            <div className="cell">DR: {unit.equipments.getDRName()}</div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ type CharacterModel = {
   name: string
   abilities: Point[]
   skills: [ParameterKey, Point][]
-  equipments: [WeaponKey, ShieldKey | null, ArmorKey] | []
+  equipments: [WeaponKey, ShieldKey, ArmorKey] | []
 }
 
 // サンプル・モデル
@@ -19,28 +19,28 @@ const SAMPLE_MODELS: CharacterModel[] = [
     name: 'アーロン',
     abilities: [4, 0, 0, 2], // 筋力, 生命力高めの重戦士タイプ
     skills: [['武術', 2], ['怪力', 1], ['鍛錬', 1]],
-    equipments: ['戦斧', '大盾', 'プレイトメイル']
+    equipments: ['長剣', '小盾', '革鎧']
   },
   {
     id: 2,
     name: 'ダニエル',
     abilities: [1, 4, 0, 2], // 敏捷力, 生命力高めの軽戦士タイプ
     skills: [['剣術', 2], ['運動', 1]],
-    equipments: ['大剣', null, '革鎧']
+    equipments: ['小剣', '小盾', '革鎧']
   },
   {
     id: 3,
     name: 'アシュリン',
     abilities: [0, 1, 4, 1], // 知力高めの魔術師タイプ
     skills: [['赤の魔法', 2], ['緑の魔法', 2]],
-    equipments: ['細剣', '小盾', '革服']
+    equipments: ['長杖', '装備無し', '革服']
   },
   {
     id: 4,
     name: 'ステファニー',
     abilities: [2, 1, 4, 0], // 筋力, 知力高めの魔戦士タイプ
     skills: [['武術', 1], ['青の魔法', 2]],
-    equipments: ['長杖', null, 'チェインメイル']
+    equipments: ['戦棍', '小盾', '革鎧']
   }
 ]
 
