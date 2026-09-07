@@ -128,8 +128,7 @@ class Sample extends Character {
     const model: CharacterModel = {
       id,
       name: NPC_LIST[seed],
-      abilities: makeAbilityValues(r1, r2, g),
-      skills: [],
+      points: makeAbilityValues(r1, r2, g),
       equipments: []
     }
     super(model)
@@ -282,5 +281,3 @@ export function createSamples(size: number = 4, total: number = 10) {
   }
   return samples
 }
-
-export const SAMPLE_CHARACTERS = createSamples(DEFAULT_SIZE)
