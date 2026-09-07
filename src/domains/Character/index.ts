@@ -9,42 +9,9 @@ export { type Point, type ParameterKey, type Parameter, Parameters, type WeaponK
 export type CharacterModel = {
   id: number
   name: string
-  abilities: Point[]
-  skills: [ParameterKey, Point][]
+  points: Point[]
   equipments: [WeaponKey, ShieldKey | null, ArmorKey] | []
 }
-
-// サンプル・モデル
-const SAMPLE_MODELS: CharacterModel[] = [
-  {
-    id: 1,
-    name: 'アーロン',
-    abilities: [4, 0, 0, 2], // 筋力, 生命力高めの重戦士タイプ
-    skills: [['武術', 2], ['怪力', 1], ['鍛錬', 1]],
-    equipments: ['戦斧', '大盾', 'プレイトメイル']
-  },
-  {
-    id: 2,
-    name: 'ダニエル',
-    abilities: [1, 4, 0, 2], // 敏捷力, 生命力高めの軽戦士タイプ
-    skills: [['剣術', 2], ['運動', 1]],
-    equipments: ['大剣', null, '革鎧']
-  },
-  {
-    id: 3,
-    name: 'アシュリン',
-    abilities: [0, 1, 4, 1], // 知力高めの魔術師タイプ
-    skills: [['赤の魔法', 2], ['緑の魔法', 2]],
-    equipments: ['細剣', '小盾', '革服']
-  },
-  {
-    id: 4,
-    name: 'ステファニー',
-    abilities: [2, 1, 4, 0], // 筋力, 知力高めの魔戦士タイプ
-    skills: [['武術', 1], ['青の魔法', 2]],
-    equipments: ['長杖', null, 'チェインメイル']
-  }
-]
 
 // キャラクタ管理を司るクラス
 export class Character {
@@ -56,15 +23,8 @@ export class Character {
   constructor(model: CharacterModel) {
     this.id = model.id
     this.name = model.name
-    this.parameters = new Parameters(model.abilities)
-    model.skills.forEach(([name, point]) => this.set(name, point))
+    this.parameters = new Parameters(model.points)
     this.equipments = model.equipments.length ? new Equipments(...model.equipments) : new Equipments()
-  }
-
-  // name と point を指定し, パラメータをセット
-  // point: 0 を指定した場合は, パラメータを削除
-  set(name: ParameterKey, point: Point) {
-    this.parameters.set(name, point)
   }
 
   // name と size を指定し, POINT_STEP に則りパラメータを増減
@@ -204,5 +164,3 @@ export class Character {
     return this.ev + (this.shield.isLarge ? 4 : 2)
   }
 }
-
-export const SAMPLE_CHARACTERS = SAMPLE_MODELS.map((model) => new Character(model))
