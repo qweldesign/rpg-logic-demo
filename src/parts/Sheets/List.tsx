@@ -3,12 +3,12 @@
 import { useNavigate } from 'react-router-dom'
 import { type Character } from '../../domains/Character'
 
-function List({ units }: { units: Character[] }) {
+function List({ units, total }: { units: Character[], total: number }) {
   // navigate を取得
   const navigate = useNavigate()
 
   return (
-    <div className="table-wrapper my-12">
+    <div className="table-wrapper">
       <table className="w-276">
         <thead>
           <tr>
@@ -34,7 +34,7 @@ function List({ units }: { units: Character[] }) {
               <td>{unit.getLevel('生命力')} ({unit.get('生命力')}CP)</td>
               <td>{unit.mainSkill.name}: {unit.mainSkill.level}</td>
               <td>{unit.weapon.name} / {unit.shield?.name || ''}{unit.shield ? ' /' : ''} {unit.armor.name}</td>
-              <td>{unit.total}</td>
+              <td>{unit.total} / {total}</td>
             </tr>
           ))}
         </tbody>
