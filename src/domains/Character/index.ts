@@ -163,4 +163,14 @@ export class Character {
     if (!this.shield) return 0
     return this.ev + (this.shield.isLarge ? 4 : 2)
   }
+
+  // Model用データに変換
+  get model(): CharacterModel {
+    return {
+      id: this.id,
+      name: this.name,
+      points: this.parameters.model,
+      equipments: this.equipments.model
+    }
+  }
 }

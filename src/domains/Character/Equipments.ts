@@ -153,4 +153,13 @@ export class Equipments {
     const { dr, isChain } = this.armor
     return `${dr}${isChain ? ' (' + Math.floor(dr / 2) + ')' : ''}`
   }
+
+  // Model用データに変換
+  get model(): [WeaponKey, ShieldKey | null, ArmorKey] {
+    return [
+      this.weapon.name,
+      this.shield?.name ?? null,
+      this.armor.name
+    ]
+  }
 }
