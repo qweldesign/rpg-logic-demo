@@ -1,7 +1,7 @@
 // src/domains/Character/Equipments.ts
 
 // 武器のキー
-const WEAPON_KEYS = [
+export const WEAPON_KEYS = [
   '細剣', '長剣', '戦棍', '戦斧', '長槍', '大剣', '長杖', '鉾槍'
 ] as const
 
@@ -16,7 +16,7 @@ export type Weapon = {
   requiredST: number // 必要筋力
 }
 
-const WEAPONS: Record<WeaponKey, Weapon> = {
+export const WEAPONS: Record<WeaponKey, Weapon> = {
   '細剣': { dmgBase: 4, dmgType: 2, twoHanded: false, ready: false, requiredST: 10 },
   '長剣': { dmgBase: 5, dmgType: 1, twoHanded: false, ready: false, requiredST: 10 },
   '戦棍': { dmgBase: 6, dmgType: 0, twoHanded: false, ready: false, requiredST: 10 },
@@ -53,7 +53,7 @@ const DMG_STEP: Omit<Dmg, 'dmgType'>[] = [
 ] as const
 
 // 盾のキー
-const SHIELD_KEYS = [
+export const SHIELD_KEYS = [
   '小盾', '大盾'
 ] as const
 
@@ -65,13 +65,13 @@ export type Shield = {
   requiredST: number // 必要筋力
 }
 
-const SHIELDS: Record<ShieldKey, Shield> = {
+export const SHIELDS: Record<ShieldKey, Shield> = {
   '小盾': { isLarge: false, requiredST: 10 },
   '大盾': { isLarge: true, requiredST: 12 }
 } as const
 
 // 服・鎧のキー
-const ARMOR_KEYS = [
+export const ARMOR_KEYS = [
   '革服', '革鎧', 'チェインメイル', 'プレイトメイル'
 ] as const
 
@@ -84,7 +84,7 @@ export type Armor = {
   requiredST: number // 必要筋力
 }
 
-const ARMORS: Record<ArmorKey, Armor> = {
+export const ARMORS: Record<ArmorKey, Armor> = {
   '革服': { dr: 1, isChain: false, requiredST: 10 },
   '革鎧': { dr: 2, isChain: false, requiredST: 11 },
   'チェインメイル': { dr: 3, isChain: true, requiredST: 12 },

@@ -6,7 +6,7 @@ const POINT_STEP = [0, 1, 2, 4, 8] as const
 export type Point = typeof POINT_STEP[number]
 
 // パラメータのキー
-const PARAMETER_KEYS = [
+export const PARAMETER_KEYS = [
   '筋力', '敏捷力', '知力', '生命力', // 能力値
   '武術', '怪力', '剣術', '運動', '青の魔法', '赤の魔法', '緑の魔法', '鍛錬' // 技能
 ] as const
@@ -21,7 +21,7 @@ export type Parameter = {
   level: number
 }
 
-const PARAMETERS: Record<ParameterKey, { base: ParameterKey | null }> = {
+export const PARAMETERS: Record<ParameterKey, { base: ParameterKey | null }> = {
   '筋力': { base: null },
   '敏捷力': { base: null },
   '知力': { base: null },
