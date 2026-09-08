@@ -2,6 +2,7 @@
 
 import { type Point, type ParameterKey, type Parameter, Parameters } from './Parameters'
 import { WEAPON_KEYS, type WeaponKey, type Weapon, WEAPONS, type Dmg, SHIELD_KEYS, type ShieldKey, type Shield, SHIELDS, ARMOR_KEYS, type ArmorKey, type Armor, ARMORS, Equipments } from './Equipments'
+import { STORAGE_KEY } from '../SaveData'
 
 export { type Point, type ParameterKey, type Parameter, Parameters, WEAPON_KEYS, type WeaponKey, type Weapon, WEAPONS, type Dmg, SHIELD_KEYS, type ShieldKey, type Shield, SHIELDS, ARMOR_KEYS, type ArmorKey, type Armor, ARMORS, Equipments }
 
@@ -19,12 +20,14 @@ export class Character {
   public name: string
   private parameters: Parameters
   private equipments: Equipments
+  private storageKey: string
 
   constructor(model: CharacterModel) {
     this.id = model.id
     this.name = model.name
     this.parameters = new Parameters(model.points)
     this.equipments = model.equipments.length ? new Equipments(...model.equipments) : new Equipments()
+    this.storageKey = `${STORAGE_KEY}:${String(this.id).padStart(2, '0')}`
   }
 
   // name と size を指定し, POINT_STEP に則りパラメータを増減
@@ -172,5 +175,21 @@ export class Character {
       points: this.parameters.model,
       equipments: this.equipments.model
     }
+  }
+
+  // 保存
+  // saveData.addKey(key) でインデックス登録とセットで行うこと
+  // isTemporary: true で SessionStorage へ編集途中のデータを保存
+  save(isTemporary: boolean = false) {
+    const storage = isTemporary ? sessionStorage : localStorage
+    const model = this.model
+    const raw = JSON.stringify(model)
+    storage.setItem(this.storageKey, raw)
+  }
+
+  // クリア
+  clear() {
+    localStorage.removeItem(this.storageKey)
+    sessionStorage.removeItem(this.storageKey)
   }
 }
