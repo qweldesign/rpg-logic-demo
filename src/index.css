@@ -4,6 +4,10 @@
   body {
     @apply text-gray-200 lg:text-lg leading-loose tracking-wider;
   }
+
+  table {
+    @apply w-max;
+  }
 }
 
 @layer project {
@@ -115,21 +119,21 @@
 
   .table-wrapper {
     @apply w-1/1 overflow-x-auto;
+  }
 
-    table {
-      @apply w-max my-6 text-[0.875em];
+  table {
+    @apply my-6 text-[0.875em];
 
-      thead > tr {
-        @apply border-y border-white;
-      }
+    thead > tr {
+      @apply border-y border-white;
+    }
 
-      tbody > tr {
-        @apply border-b border-white hover:bg-white/10;
-      }
+    tbody > tr {
+      @apply border-b border-white hover:bg-white/10;
+    }
 
-      th, td {
-        @apply p-3 text-left;
-      }
+    th, td {
+      @apply p-3 text-left;
     }
   }
 
