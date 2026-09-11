@@ -266,12 +266,13 @@ class Sample extends Character {
 // サンプル・キャラクタ群生成関数
 // size: 生成数 (範囲内から等間隔にサンプリング)
 // total: point 総計
-export function createSamples(size: number = 4, total: number = 10) {
+// idOffset: IDのオフセット
+export function createSamples(size: number = 4, total: number = 10, idOffset: number = 0) {
   const samples = []
   const step = DEFAULT_SIZE / size // 生成数に応じたステップ
   const mod = Math.random() * step // シード値の修正値 (4人PTなら, 0～15の範囲で適用)
   for (let n = 0; n < size; n++) {
-    const id = n + 1 // 1からカウント
+    const id = n + idOffset + 1 // オフセットを加え, 1からカウント
     const seed = Math.floor(n * step + mod) % DEFAULT_SIZE
     const sample = new Sample(id, seed, total)
     samples.push(sample)
