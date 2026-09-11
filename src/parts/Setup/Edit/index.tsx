@@ -7,6 +7,7 @@ import EquipmentsSetting from './EquipmentsSetting'
 import ProfileSetting from './ProfileSetting'
 import Modal from '../Modal'
 import { type ParameterKey, Parameters, type WeaponKey, type Weapon, WEAPONS, type ShieldKey, type Shield, SHIELDS, type ArmorKey, type Armor, ARMORS, Equipments, type CharacterModel as Model, Character } from '../../../domains/Character'
+import { PC_LIST } from '../../../domains/Sample'
 import { SaveData } from '../../../domains/SaveData'
 
 export type State = {
@@ -20,6 +21,7 @@ export type State = {
   armorList: [ArmorKey, Armor][] // 装備可能な服・鎧一覧
   isSetTwoHanded: boolean // 両手武器を装備したかどうか
   isSTChanged: boolean, // ST (筋力) を変更したかどうか
+  gender: string, // 名前の自動決定の基準
   name: string // 名前設定
 }
 
@@ -29,7 +31,9 @@ export type Action =
   | { type: 'SET_EQUIP', payload: { prevEquips: Equipments,  slot: 'weapon' | 'shield' | 'armor', name: string } }
   | { type: 'RESET_SHIELD' }
   | { type: 'RESET_EQUIPS' }
+  | { type: 'SET_GENDER', payload: { gender: string } }
   | { type: 'SET_NAME', payload: { name: string } }
+  | { type: 'AUTO_NAME' }
   | { type: 'CLEAR_TRANSITION' }
 
 function Edit() {
@@ -57,6 +61,7 @@ function Edit() {
     armorList: Object.entries(ARMORS) as [ArmorKey, Armor][],
     isSetTwoHanded: false,
     isSTChanged: false,
+    gender: '男性',
     name: '未設定'
   }
 
@@ -185,10 +190,27 @@ function Edit() {
         }
       }
       
+      case 'SET_GENDER': {
+        return {
+          ...state,
+          gender: action.payload.gender
+        }
+      }
+      
       case 'SET_NAME': {
         return {
           ...state,
           name: action.payload.name
+        }
+      }
+
+      case 'AUTO_NAME': {
+        const g = state.gender === '男性' ? 0 : 1
+        const n = Math.floor((Math.random() + g) * PC_LIST.length / 2)
+        
+        return {
+          ...state,
+          name: PC_LIST[n]
         }
       }
 

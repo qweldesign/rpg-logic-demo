@@ -8,18 +8,38 @@ function ProfileSetting(
     state: State,
     dispatch: Dispatch<Action>
   }) {
+  // SET_GENDER
+  const onSetGender = (gender: string) => {
+    // 発火
+    dispatch({ type: 'SET_GENDER', payload: { gender } })
+  }
+
   // SET_NAME
   const onSetName = (name: string) => {
     // 発火
     dispatch({ type: 'SET_NAME', payload: { name } })
   }
 
+  // AUTO_NAME
+  const autoName = () => {
+    // 発火
+    dispatch({ type: 'AUTO_NAME' })
+  }
+
   return (
     <section>
       <h4>3. プロフィールの設定</h4>
       <div>
+        <label className="inline-block w-24 sm:text-right">性別: </label>
+        <select className="w-72 m-6 px-3 text-left" value={state.gender} onChange={(e) => onSetGender(e.target.value)}>
+          <option value="男性">男性</option>
+          <option value="女性">女性</option>
+        </select>
+      </div>
+      <div>
         <label className="inline-block w-24 sm:text-right">名前: </label>
         <input className="w-72 m-6 px-3 text-left" type="text" value={state.name} onChange={(e) => onSetName(e.target.value)} />
+        <button className="block sm:inline-block w-24 h-6 m-auto text-sm/1" onClick={autoName}>自動決定</button>
       </div>
     </section>
   )
