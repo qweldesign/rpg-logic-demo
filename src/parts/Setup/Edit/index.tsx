@@ -15,6 +15,7 @@ export type State = {
   params: Parameters // 現在のパラメータ
   prevEquips: Equipments // 元の装備
   equips: Equipments // 現在の装備
+  isSetTwoHanded: boolean // 両手武器を装備したかどうか
   name: string // 名前設定
 }
 
@@ -22,6 +23,7 @@ export type Action =
   | { type: 'INIT', payload: { prevModel: Model,  model: Model } }
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterKey, size: number } }
   | { type: 'SET_EQUIP', payload: { prevEquips: Equipments,  slot: 'weapon' | 'shield' | 'armor', name: string } }
+  | { type: 'RESET_SHIELD' }
   | { type: 'SET_NAME', payload: { name: string } }
 
 function Edit() {
@@ -44,6 +46,7 @@ function Edit() {
     params: new Parameters(),
     prevEquips: new Equipments(),
     equips: new Equipments(),
+    isSetTwoHanded: false,
     name: '未設定'
   }
 
@@ -84,8 +87,10 @@ function Edit() {
       case 'SET_EQUIP': {
         const slot = action.payload.slot
         const key = action.payload.name
+        let isSetTwoHanded = false
         if (slot === 'weapon') {
           state.equips.weapon = key as WeaponKey
+          isSetTwoHanded = state.equips.weapon.twoHanded
         }
         if (slot === 'shield') {
           if (key === '') state.equips.shield = null
@@ -100,7 +105,15 @@ function Edit() {
 
         return {
           ...state,
-          equips: nextEquips
+          equips: nextEquips,
+          isSetTwoHanded
+        }
+      }
+
+      case 'RESET_SHIELD': {
+        return {
+          ...state,
+          equips: new Equipments(state.equips.weapon.name, null, state.equips.armor.name)
         }
       }
       
@@ -132,6 +145,12 @@ function Edit() {
     const model: Model = saveData.loadModel(uid, true) ?? prevModel
     // 発火
     dispatch({ type: 'INIT', payload: { prevModel, model } })
+  }
+
+  // RESET_SHIELD
+  const onResetShield = () => {
+    // 発火
+    dispatch({ type: 'RESET_SHIELD' }) 
   }
 
   // 残りCPを計算 isMax: true で持ち点を返す
@@ -197,6 +216,21 @@ function Edit() {
   useEffect(() => {    
     onInit() // 初期化
   }, [])
+
+  // 両手武器の装着の監視
+  useEffect(() => {
+    if (state.isSetTwoHanded && state.equips.shield) {
+      // 両手武器を装着したとき
+      // アラート表示 & 盾解除
+      const message = (
+        <p className="text-center">両手武器が装着されました。
+          <br />盾が解除されました。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      onResetShield()
+    }
+  }, [state.isSetTwoHanded])
 
   return (
     <div className="edit px-6">
