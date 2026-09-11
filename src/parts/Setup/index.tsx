@@ -33,8 +33,14 @@ function Setup() {
     setPoints(saveData.loadPoints())
     const keys = saveData.loadKeys()
 
-    // メンバーが1名以下の場合, 初期メンバーを生成
-    if (keys.size <= 1) {
+    // セーブデータが空の場合, 新規作成画面へ
+    if (!keys || !keys.size) {
+      navigate('/setup/edit/')
+      return
+    }
+
+    // メンバーが1名の場合, 初期メンバーを生成
+    if (keys.size === 1) {
       const units = createSamples(5 - keys.size, saveData.loadPoints(), keys.size)
       units.forEach(unit => {
         const key = String(unit.id).padStart(2, '0')
@@ -60,7 +66,7 @@ function Setup() {
           <>
             <List units={units} total={points}/>
             <div className="text-center">
-              <button className="w-48 h-12">新規作成</button>
+              <button className="w-48 h-12" onClick={() => navigate('/setup/edit/')} >新規作成</button>
               <button className="w-48 h-12" onClick={reset}>リセット</button>
             </div>
           </>
@@ -69,7 +75,7 @@ function Setup() {
             <Detail unit={unit} />
             <div className="text-center">
               <button className="w-48 h-12" onClick={() => navigate('/setup/')}>一覧へ戻る</button>
-              <button className="w-48 h-12">編集</button>
+              <button className="w-48 h-12" onClick={() => navigate(`/setup/edit/${uid}`)}>編集</button>
             </div>
           </>
       }

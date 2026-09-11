@@ -75,7 +75,7 @@
     @apply order-1 w-1/1 max-w-sm p-6;
   }
 
-  .primary-col, .secondary-col {
+  .primary-col, .secondary-col, .edit {
     h1, h2, h3 ,h4, h5 {
       @apply font-serif leading-relaxed tracking-wide;
     }

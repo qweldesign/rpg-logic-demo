@@ -86,10 +86,14 @@ export class SaveData {
   // uid を指定してモデルを読み込み
   // インデックスに uid が無ければ空のモデルを返す
   // isTemporary: true で SessionStorage から編集途中のデータを読み込み
+  // このとき編集途中データが無ければ LocalStorage から読み込み
   loadModel(uid: string, isTemporary: boolean = false) {
     const storage = isTemporary ? sessionStorage : localStorage
     const storageKey = `${STORAGE_KEY}:${uid}`
-    const raw = storage.getItem(storageKey) ?? 'null'
+    let raw = storage.getItem(storageKey) ?? 'null'
+    if (isTemporary && raw === 'null') {
+      raw = localStorage.getItem(storageKey) ?? 'null'
+    }
     const model = JSON.parse(raw) ?? DEFAULT_MODEL
     return model
   }
