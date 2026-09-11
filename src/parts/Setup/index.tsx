@@ -4,6 +4,7 @@ import { type ReactNode, useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import List from '../Sheets/List'
 import Detail from '../Sheets/Detail'
+import Formation from '../Setup/Formation'
 import Modal from '../Setup/Modal'
 import { Character } from '../../domains/Character'
 import { createSamples } from '../../domains/Sample'
@@ -17,6 +18,9 @@ function Setup() {
   // List, Detail に渡すパラメータ
   const [units, setUnits] = useState<Character[]>([])
   const [unit, setUnit] = useState<Character | null>(null)
+
+  // Formation に渡すパラメータ
+  const [slots, setSlots] = useState<(number | null)[]>(Array(4).fill(null))
 
   // Modal に渡すパラメータ
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
@@ -61,6 +65,16 @@ function Setup() {
     navigate('/setup/')
   }
 
+  // 出撃スロットの選択を更新
+  const onChangeSlot = (index: number, value: string) => {
+    const id = value === '' ? null : Number(value)
+    setSlots(prev => {
+      const next = prev.map((v, i) => (i === index ? id : v))
+      saveData.saveFormation(next) // 保存
+      return next
+    })
+  }
+
   // 最初に1回だけ実行
   useEffect(() => {
     // セーブデータの内容読み込み
@@ -73,7 +87,7 @@ function Setup() {
       return
     }
 
-    // メンバーが1名の場合, 初期メンバーを生成
+    // メンバが1名の場合, 初期メンバを生成
     if (keys.size === 1) {
       const { units, seed } = createSamples(5 - keys.size, saveData.loadPoints(), keys.size)
       units.forEach(unit => {
@@ -91,6 +105,11 @@ function Setup() {
     // uid があれば1人のサンプルを探す
     const model = uid ? models.find(m => m.id === Number(uid)) : null
     setUnit(model ? new Character(model) : null)
+
+    // 出撃スロットの初期化
+    const saved = saveData.loadFormation()
+      .map(id => (id !== null && models.some(m => m.id === id)) ? id : null)
+    setSlots(Array.from({ length: 4 }, (_, i) => saved[i] ?? null))
   }, [uid])
 
   return (
@@ -99,6 +118,7 @@ function Setup() {
       {!unit
         ? 
           <>
+            {units.length >= 4 && <Formation units={units} slots={slots} onChangeSlot={onChangeSlot} />}
             <List units={units} total={points}/>
             <div className="text-center">
               <button className="w-48 h-12" onClick={() => navigate('/setup/edit/')} >新規作成</button>
