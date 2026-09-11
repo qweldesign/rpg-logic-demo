@@ -22,6 +22,8 @@ const DEFAULT_POINTS = 10
 
 const DEFAULT_GOLD = 100
 
+const DEFAULT_FORMATION = [1, 2, 3, 4]
+
 const DEFAULT_MODEL = {
   id: 0,
   name: '未設定',
@@ -37,6 +39,7 @@ export class SaveData {
     cp?: number
     gold?: number
     seed?: number
+    formation?: (number | null)[]
   }
 
   constructor() {
@@ -125,6 +128,17 @@ export class SaveData {
   loadSeed() {
     return this.data.seed || 0
   }
+  
+  // 出撃メンバを保存 (更新)
+  saveFormation(ids: (number | null)[]) {
+    this.data = { ...this.data, formation: ids }
+    this.save()
+  }
+
+  // 出撃メンバを読み込み
+  loadFormation() {
+    return this.data.formation ?? DEFAULT_FORMATION
+  }
 
   // uid を指定してモデルを読み込み
   // インデックスに uid が無ければ空のモデルを返す
@@ -158,6 +172,7 @@ export class SaveData {
     if (!keys) return
     const order = keys.indexOf(uid)
     if (order === -1) return
+    const removedId = this.loadModel(uid).id
     // 配列を詰める
     keys.forEach((uid, i) => {
       if (i > order) {
@@ -177,6 +192,11 @@ export class SaveData {
     this.removeKey(oldUid)
     localStorage.removeItem(oldStorageKey)
     sessionStorage.removeItem(oldStorageKey)
+
+    // 出撃メンバーの id 参照を, 上記の id 詰め直しに追従させる
+    const formation = this.loadFormation()
+      .map(id => id && id > removedId ? id - 1 : id !== removedId ? id : null)
+    this.saveFormation(formation)
   }
 
   // Storage をクリア
