@@ -6,7 +6,7 @@ import ParametersSetting from './ParametersSetting'
 import EquipmentsSetting from './EquipmentsSetting'
 import ProfileSetting from './ProfileSetting'
 import Modal from '../Modal'
-import { type ParameterKey, Parameters, type WeaponKey, type ShieldKey, type ArmorKey, Equipments, type CharacterModel as Model, Character } from '../../../domains/Character'
+import { type ParameterKey, Parameters, type WeaponKey, type Weapon, WEAPONS, type ShieldKey, type Shield, SHIELDS, type ArmorKey, type Armor, ARMORS, Equipments, type CharacterModel as Model, Character } from '../../../domains/Character'
 import { SaveData } from '../../../domains/SaveData'
 
 export type State = {
@@ -15,7 +15,11 @@ export type State = {
   params: Parameters // 現在のパラメータ
   prevEquips: Equipments // 元の装備
   equips: Equipments // 現在の装備
+  weaponList: [WeaponKey, Weapon][] // 装備可能な武器一覧
+  shieldList: [ShieldKey, Shield][] // 装備可能な盾一覧
+  armorList: [ArmorKey, Armor][] // 装備可能な服・鎧一覧
   isSetTwoHanded: boolean // 両手武器を装備したかどうか
+  isSTChanged: boolean, // ST (筋力) を変更したかどうか
   name: string // 名前設定
 }
 
@@ -24,7 +28,9 @@ export type Action =
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterKey, size: number } }
   | { type: 'SET_EQUIP', payload: { prevEquips: Equipments,  slot: 'weapon' | 'shield' | 'armor', name: string } }
   | { type: 'RESET_SHIELD' }
+  | { type: 'RESET_EQUIPS' }
   | { type: 'SET_NAME', payload: { name: string } }
+  | { type: 'CLEAR_TRANSITION' }
 
 function Edit() {
   // navigate, uid を取得
@@ -46,12 +52,32 @@ function Edit() {
     params: new Parameters(),
     prevEquips: new Equipments(),
     equips: new Equipments(),
+    weaponList: Object.entries(WEAPONS) as [WeaponKey, Weapon][],
+    shieldList: Object.entries(SHIELDS) as [ShieldKey, Shield][],
+    armorList: Object.entries(ARMORS) as [ArmorKey, Armor][],
     isSetTwoHanded: false,
+    isSTChanged: false,
     name: '未設定'
   }
 
   // 状態更新 (設定内容)
   const reducer: Reducer<State, Action> = (state, action) => {
+    // 装備一覧を更新する関数
+    const updateEquipList = (st: number) => {
+      const weaponList = Object.entries(WEAPONS).filter(
+        ([, weapon]) => weapon.requiredST <= st
+      ) as [WeaponKey, Weapon][]
+      const shieldList = state.equips.weapon.twoHanded ? []
+        :Object.entries(SHIELDS).filter(
+          ([, shield]) => shield.requiredST <= st
+        ) as [ShieldKey, Shield][]
+      const armorList = Object.entries(ARMORS).filter(
+        ([, armor]) => armor.requiredST <= st
+      ) as [ArmorKey, Armor][]
+
+      return { weaponList, shieldList, armorList }
+    }
+
     switch (action.type) {
       case 'INIT': {
         // 名前, CP を取得
@@ -65,22 +91,34 @@ function Edit() {
           ? new Equipments(...action.payload.prevModel.equipments) : new Equipments()
         const equips = action.payload.model.equipments.length
           ? new Equipments(...action.payload.model.equipments) : new Equipments()
+        
+        // 装備一覧を更新
+        const { weaponList, shieldList, armorList } = updateEquipList(params.getLevel('筋力'))
 
         return {
           ...state,
           name, points,
           prevParams, params,
-          prevEquips, equips
+          prevEquips, equips,
+          weaponList, shieldList, armorList
         }
       }
 
       case 'STEP_PARAM': {
         const nextParams = new Parameters(state.params.model)
         nextParams.step(action.payload.name, action.payload.size)
+        
+        // 装備一覧を更新
+        const { weaponList, shieldList, armorList } = updateEquipList(nextParams.getLevel('筋力'))
+
+        // ST (筋力) を更新したかどうか
+        const isSTChanged = action.payload.name === '筋力' && action.payload.size === -1
 
         return {
           ...state,
-          params: nextParams
+          params: nextParams,
+          weaponList, shieldList, armorList,
+          isSTChanged
         }
       }
 
@@ -103,9 +141,13 @@ function Edit() {
         const nextEquips = state.equips.model.length
           ? new Equipments(...state.equips.model) : new Equipments
 
+        // 装備一覧を更新
+        const { weaponList, shieldList, armorList } = updateEquipList(state.params.getLevel('筋力'))
+
         return {
           ...state,
           equips: nextEquips,
+          weaponList, shieldList, armorList,
           isSetTwoHanded
         }
       }
@@ -116,11 +158,44 @@ function Edit() {
           equips: new Equipments(state.equips.weapon.name, null, state.equips.armor.name)
         }
       }
+
+      case 'RESET_EQUIPS': {
+        const st = state.params.getLevel('筋力')
+        const nextWeapon = state.equips.weapon.name
+        const nextShield = state.equips.shield?.name ?? null
+        const nextArmor = state.equips.armor.name
+
+        let resetedWeapon = nextWeapon
+        let resetedShield = nextShield
+        let resetedArmor = nextArmor
+
+        if (WEAPONS[nextWeapon].requiredST > st) {
+          resetedWeapon = state.prevEquips.weapon.name
+        }
+        if (nextShield && SHIELDS[nextShield].requiredST > st) {
+          resetedShield = state.prevEquips.shield?.name ?? null
+        }
+        if (ARMORS[nextArmor].requiredST > st) {
+          resetedArmor = state.prevEquips.armor.name
+        }
+
+        return {
+          ...state,
+          equips: new Equipments(resetedWeapon, resetedShield, resetedArmor),
+        }
+      }
       
       case 'SET_NAME': {
         return {
           ...state,
           name: action.payload.name
+        }
+      }
+
+      case 'CLEAR_TRANSITION': {
+        return {
+          ...state,
+          isSTChanged: false
         }
       }
 
@@ -151,6 +226,18 @@ function Edit() {
   const onResetShield = () => {
     // 発火
     dispatch({ type: 'RESET_SHIELD' }) 
+  }
+
+  // RESET_EQUIPS
+  const onResetEquip = () => {
+    // 発火
+    dispatch({ type: 'RESET_EQUIPS' }) 
+  }
+
+  // CLEAR_TRANSITION
+  const clearTransition = () => {
+    // 発火
+    dispatch({ type: 'CLEAR_TRANSITION' })
   }
 
   // 残りCPを計算 isMax: true で持ち点を返す
@@ -231,6 +318,33 @@ function Edit() {
       onResetShield()
     }
   }, [state.isSetTwoHanded])
+
+  // ST (筋力) 変化の監視
+  useEffect(() => {
+    // 必要筋力による装備制限を確認する関数
+    const checkEquipsByRequiredST = () => {
+      const st = state.params.getLevel('筋力')
+      const nextWeapon = state.equips.weapon.name
+      const nextShield = state.equips.shield?.name ?? null
+      const nextArmor = state.equips.armor.name
+      return (WEAPONS[nextWeapon].requiredST > st
+        || (nextShield && SHIELDS[nextShield].requiredST > st)
+        || ARMORS[nextArmor].requiredST > st
+      )
+    }
+    if (state.isSTChanged && checkEquipsByRequiredST()) {
+      // ST (筋力) を減らしたとき
+      // アラート表示 & 装備解除
+      const message = (
+        <p className="text-center">ST (筋力) が減り、装備可能な武器・防具が変わりました。
+          <br />装備の選択をやり直してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      onResetEquip()
+      clearTransition()
+    }
+  }, [state.isSTChanged])
 
   return (
     <div className="edit px-6">
