@@ -36,6 +36,7 @@ export class SaveData {
     keys?: string[]
     cp?: number
     gold?: number
+    seed?: number
   }
 
   constructor() {
@@ -112,6 +113,17 @@ export class SaveData {
     } else {
       return this.data.gold ?? DEFAULT_GOLD
     }
+  }
+  
+  // シード値を保存
+  saveSeed(seed: number) {
+    this.data = { ...this.data, seed }
+    this.save()
+  }
+
+  // シード値を読み込み
+  loadSeed() {
+    return this.data.seed || 0
   }
 
   // uid を指定してモデルを読み込み
