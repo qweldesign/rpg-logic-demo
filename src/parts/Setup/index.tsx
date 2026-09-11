@@ -1,10 +1,10 @@
-// src/parts/Setup.tsx
+// src/parts/Setup/index.tsx
 
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import List from './Sheets/List'
-import Detail from './Sheets/Detail'
-import { createSamples } from '../domains/Sample'
+import List from '../Sheets/List'
+import Detail from '../Sheets/Detail'
+import { createSamples } from '../../domains/Sample'
 
 function Setup() {
   // 状態管理
