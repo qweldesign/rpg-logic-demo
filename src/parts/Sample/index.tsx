@@ -17,7 +17,7 @@ function Sample() {
   const { uid } = useParams()
 
   // サンプル生成
-  const samples = createSamples(64, total)
+  const samples = createSamples(64, total).units
   const sample = samples.find(m => m.id === Number(uid))
 
   return (

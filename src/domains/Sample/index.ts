@@ -279,15 +279,15 @@ class Sample extends Character {
 // size: 生成数 (範囲内から等間隔にサンプリング)
 // total: point 総計
 // idOffset: IDのオフセット
-export function createSamples(size: number = 4, total: number = 10, idOffset: number = 0) {
+export function createSamples(size: number = 4, total: number = 10, idOffset: number = 0, seedOffset: number | null = null) {
   const samples = []
   const step = DEFAULT_SIZE / size // 生成数に応じたステップ
-  const mod = Math.random() * step // シード値の修正値 (4人PTなら, 0～15の範囲で適用)
+  seedOffset ??= Math.floor(Math.random() * step) // シード値の修正値 (4人PTなら, 0～15の範囲で適用)
   for (let n = 0; n < size; n++) {
     const id = n + idOffset + 1 // オフセットを加え, 1からカウント
-    const seed = Math.floor(n * step + mod) % DEFAULT_SIZE
+    const seed = Math.floor(n * step + seedOffset) % DEFAULT_SIZE
     const sample = new Sample(id, seed, total)
     samples.push(sample)
   }
-  return samples
+  return { units: samples, seed: seedOffset }
 }

@@ -41,12 +41,13 @@ function Setup() {
 
     // メンバーが1名の場合, 初期メンバーを生成
     if (keys.size === 1) {
-      const units = createSamples(5 - keys.size, saveData.loadPoints(), keys.size)
+      const { units, seed } = createSamples(5 - keys.size, saveData.loadPoints(), keys.size)
       units.forEach(unit => {
         const key = String(unit.id).padStart(2, '0')
         saveData.addKey(key) // インデックス登録
         unit.save() // キャラクター保存
       })
+      saveData.saveSeed(seed)
     }
 
     // モデル読み込みとユニット生成

@@ -32,6 +32,7 @@ export class SaveData {
   private data: {
     keys?: string[]
     cp?: number
+    seed?: number
   }
 
   constructor() {
@@ -81,6 +82,17 @@ export class SaveData {
   // CPを読み込み
   loadPoints() {
     return this.data.cp ?? DEFAULT_POINTS
+  }
+
+  // シード値を保存
+  saveSeed(seed: number) {
+    this.data = { ...this.data, seed }
+    this.save()
+  }
+
+  // シード値を読み込み
+  loadSeed() {
+    return this.data.seed || 0
   }
 
   // uid を指定してモデルを読み込み
