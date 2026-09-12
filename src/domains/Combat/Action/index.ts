@@ -3,12 +3,12 @@
 import { Combat as State } from '../'
 import { POSITION_KEYS } from '../Unit'
 import { type Judge, type Score, getRoll, judge, score } from './roll'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult } from './types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
 import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown } from './resolver'
 
-export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown }
+export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
@@ -52,6 +52,7 @@ export class CombatAction {
     return {
       ready: this.availabilityChecker.canReady(),
       attack: this.availabilityChecker.canAttack(),
+      doubleAttack: this.availabilityChecker.canDoubleAttack(),
       feint: this.availabilityChecker.canFeint(),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
@@ -89,7 +90,7 @@ export class CombatAction {
         break
 
       case 'attack':
-        results = this.effects.attack(action.targets[0])
+        results = this.effects.attack(action.targets[0], action.options.fullPower)
         break
 
       case 'feint':

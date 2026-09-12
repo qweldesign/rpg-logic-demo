@@ -23,18 +23,33 @@ export const POSITION_LABELS: Record<Position, string> = {
   right: '右翼'
 } as const
 
+export const FULL_POWER_KEYS = ['none', 'dmg', 'level', 'feint', 'double', 'ready'] as const
+
+export const FULL_POWER_OPTIONS: Record<FullPower, { label: string }> = {
+  none: { label: '通常攻撃' },
+  dmg: { label: 'ダメージ安定' },
+  level: { label: '技能値+4' },
+  feint: { label: '牽制即攻撃' },
+  double: { label: '2回攻撃' },
+  ready: { label: '準備即攻撃' }
+} as const
+
 // 行動キー
 export type ActionKey = typeof ACTION_KEYS[number]
+
+// 全力攻撃オプション
+export type FullPower = typeof FULL_POWER_KEYS[number]
 
 // 行動オプション
 export type ActionOptions = {
   position?: Position
+  fullPower?: FullPower
 }
 
 // 行動キーとオプションの組み合わせ
 export type ActionRequest =
   | { key: 'ready', options: {}, targets: [] }
-  | { key: 'attack', options: {}, targets: [Unit] }
+  | { key: 'attack', options: { fullPower: FullPower }, targets: [Unit] }
   | { key: 'feint', options: {}, targets: [Unit] }
   | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }

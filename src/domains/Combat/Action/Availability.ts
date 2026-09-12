@@ -22,6 +22,12 @@ export class CombatActionAvailability {
   canAttack(): boolean {
     return this.state.actor.attack.ready && this.state.actor.position !== 'back'
   }
+  
+  // 「2回攻撃」実行可否取得
+  // 攻撃毎に準備を要する武器でないこと
+  canDoubleAttack(): boolean {
+    return !this.state.actor.attack.needsReady
+  }
 
   //「牽制」実行可否取得
   // 「攻撃」と同条件

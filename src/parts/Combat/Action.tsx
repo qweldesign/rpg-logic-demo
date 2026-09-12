@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
-import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
+import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'attackOption' | 'confirmFeint' | 'confirmDefense' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'all'
 
@@ -64,8 +64,12 @@ function Action({ store }: { store: Store }) {
         >準備</button>
         <button
           disabled={!store.availability.attack}
-          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); }} // ターゲットパレットへ進む
+          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack');  setActionOptions({ fullPower: 'none' });}} // デフォルトオプションをセットし, ターゲットパレットへ進む
         >攻撃</button>
+        <button
+          disabled={!store.availability.attack}
+          onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
+        >全力攻撃</button>
         <button
           disabled={!store.availability.feint}
           onClick={() => { setActionPalette('target'); setTargetPalette('feint'); setActionKey('feint'); }} // ターゲットパレットへ進む
@@ -106,7 +110,7 @@ function Action({ store }: { store: Store }) {
             <div>{target.name}</div>
             <div>{store.actor.attack.name}: {store.actor.attack.dmgName}</div>
             <div>{target.defense.name.armor}: {target.defense.drName}</div>
-            <div>攻撃目標値: {store.actor.attack.getTarget()}</div>
+            <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.fullPower!)}</div>
             <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {target.defense.getTarget(store.actor).target} ({defenseType[target.defense.getTarget(store.actor).type]})</div>
             <div>効果: </div>
             <div>ダメージ {store.actor.attack.getExpectedDmg()} 点</div>
@@ -117,6 +121,26 @@ function Action({ store }: { store: Store }) {
         >実行</button>
         <button
           onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
+      </div>
+
+      {/* 全力攻撃 */}
+      <div className="actions option" data-disable={actionPalette !== 'attackOption'}>
+        {FULL_POWER_KEYS.map(key => key !== 'none'  && key !== 'ready' && (key !== 'double' || store.availability.doubleAttack) && (
+          <button
+            className="is-large"
+            key={key}
+            onClick={() => { setActionOptions({ fullPower: key }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >{FULL_POWER_OPTIONS[key].label}</button>
+        ))}
+        {store.availability.ready && (
+          <button
+            className="is-large"
+            onClick={() => { setActionOptions({ fullPower: 'ready' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >{FULL_POWER_OPTIONS.ready.label}</button>
+        )}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
       </div>
 
@@ -180,9 +204,16 @@ function Action({ store }: { store: Store }) {
                 onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }} // ターゲットをセットし, 攻撃確認パレットへ進む
               >{target.name}</button>
             ))}
-            <button
-              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
-            >戻る</button>
+            {actionOptions.fullPower === 'none' && ( // 通常攻撃時
+              <button
+                onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+              >戻る</button>
+            )}
+            {actionOptions.fullPower !== 'none' && ( // 全力攻撃時
+              <button
+                onClick={() => { setActionPalette('attackOption'); setActionOptions({ fullPower: 'none' }); }} // 攻撃オプションをリセットし, 攻撃オプションパレットへ戻る
+              >戻る</button>
+            )}
           </>
         )}
 

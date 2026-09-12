@@ -20,6 +20,8 @@ export class CombatDefense {
   // 状態値
   public parryCount: number //「受け」試行回数
   public blockCount: number //「止め」試行回数
+  public isFullAttackTurn: boolean //「全力攻撃」実行ターン
+  public isFullAttack: boolean //「全力攻撃」可否
   public isFullDefenseTurn: boolean //「全力防御」実行ターン
   public isFullDefense: boolean //「全力防御」可否
 
@@ -37,14 +39,20 @@ export class CombatDefense {
     this.drName = model.equipments.getDRName()
     this.parryCount = 0
     this.blockCount = 0
+    this.isFullAttackTurn = false
+    this.isFullAttack = false
     this.isFullDefenseTurn = false
     this.isFullDefense = false
   }
 
-  // 次のターンに進む際に, 「受け」「止め」試行回数と「全力防御」をリセットする
+  // 次のターンに進む際に, 「受け」「止め」試行回数と「全力攻撃」「全力防御」をリセットする
   nextTurn() {
     this.parryCount = 0
     this.blockCount = 0
+    // このターンに全力攻撃を選択したなら, 全力攻撃を true に変更
+    this.isFullAttack = this.isFullAttackTurn
+    this.isFullAttackTurn = false
+    // このターンに全力防御を選択したなら, 全力防御を true に変更
     this.isFullDefense =  this.isFullDefenseTurn
     this.isFullDefenseTurn = false
   }
@@ -55,6 +63,7 @@ export class CombatDefense {
     return (this.ev.weapon > 0
       && this.self.attack.ready
       && this.parryCount < (this.isFullDefense ? 2 : 1)
+      && !this.isFullAttack
     )
   }
 
@@ -62,6 +71,7 @@ export class CombatDefense {
   get canBlock() {
     return (this.ev.shield > 0
       && this.blockCount < (this.isFullDefense ? 2 : 1)
+      && !this.isFullAttack
     )
   }
 

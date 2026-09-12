@@ -31,7 +31,8 @@ export class CombatLog {
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {
       case 'attack':
-        return `${ACTION_LABELS[request.key]}:${this.createAttackResultLabel(request, results)}`
+        const attackLabel = request.options.fullPower !== 'none' ? '全力攻撃' : ACTION_LABELS[request.key]
+        return `${attackLabel}:${this.createAttackResultLabel(request, results)}`
 
       case 'feint':
         return `${ACTION_LABELS[request.key]}:${this.createFeintResultLabel(results)}`
