@@ -111,32 +111,38 @@ export class CombatDefense {
   // 防御 (回避判定) の目標値を取得
   // 各種状況による修正値 (バフ, デバフ, 朦朧状態, 転倒, 牽制のターゲットによる修正) を含める
   // 「受け」
-  getParryTarget() {
-    return Math.max(4, this.parryTarget)
+  getParryTarget(actor: Unit) {
+    const feint = actor.attack.feint
+    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
+    return Math.max(4, this.parryTarget - feintScore)
   }
 
   // 「止め」
-  getBlockTarget() {
-    return Math.max(4, this.blockTarget)
+  getBlockTarget(actor: Unit) {
+    const feint = actor.attack.feint
+    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
+    return Math.max(4, this.blockTarget - feintScore)
   }
 
   // 「よけ」
-  getDodgeTarget() {
-    return Math.max(4, this.dodgeTarget)
+  getDodgeTarget(actor: Unit) {
+    const feint = actor.attack.feint
+    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
+    return Math.max(4, this.dodgeTarget - feintScore)
   }
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
-  getTarget(): DefenseTarget {
+  getTarget(actor: Unit): DefenseTarget {
     let type, target
     if (this.canBlock) {
       type = 'block' as const
-      target = this.getBlockTarget()
+      target = this.getBlockTarget(actor)
     } else if (this.canParry) {
       type = 'parry' as const
-      target = this.getParryTarget()
+      target = this.getParryTarget(actor)
     } else {
       type = 'dodge' as const
-      target = this.getDodgeTarget()
+      target = this.getDodgeTarget(actor)
     }
     return { type, target }
   }
