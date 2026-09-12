@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'confirmDefense' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'move' | 'target' | 'hidden'
 
-type TargetPalette = 'attack' | 'all'
+type TargetPalette = 'attack' | 'feint' | 'all'
 
 function Action({ store }: { store: Store }) {
   // 状態管理
@@ -60,6 +60,10 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); }} // ターゲットパレットへ進む
         >攻撃</button>
         <button
+          disabled={!store.availability.feint}
+          onClick={() => { setActionPalette('target'); setTargetPalette('feint'); setActionKey('feint'); }} // ターゲットパレットへ進む
+        >牽制</button>
+        <button
           disabled={!store.availability.defense}
           onClick={() => { setActionPalette('confirmDefense'); setActionKey('defense'); }} // 防御確認パレットへ進む
         >全力防御</button>
@@ -82,9 +86,29 @@ function Action({ store }: { store: Store }) {
             <div>{store.actor.attack.name}: {store.actor.attack.dmgName}</div>
             <div>{actionTarget.defense.name.armor}: {actionTarget.defense.drName}</div>
             <div>攻撃目標値: {store.actor.attack.getTarget()}</div>
-            <div>防御目標値: {actionTarget.defense.getTarget().target} ({defenseType[actionTarget.defense.getTarget().type]})</div>
+            <div className={actionTarget === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {actionTarget.defense.getTarget(store.actor).target} ({defenseType[actionTarget.defense.getTarget(store.actor).type]})</div>
             <div>効果: </div>
             <div>ダメージ {store.actor.attack.getExpectedDmg(actionTarget.defense.dr, actionTarget.defense.isChain)} 点</div>
+          </div>
+        )}
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { setActionPalette('target'); setActionTarget(store.actor); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
+      </div>
+
+      {/* 牽制確認 */}
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmFeint'}>
+        {actionTarget && (
+          <div className="confirm__grid">
+            <div>{store.actor.name}</div>
+            <div>{actionTarget.name}</div>
+            <div>牽制目標値: {store.actor.attack.target}</div>
+            <div>防御目標値: {actionTarget.defense.target.target} ({defenseType[actionTarget.defense.target.type]})</div>
+            <div>効果: </div>
+            <div>防御目標値の低下</div>
           </div>
         )}
         <button
@@ -125,12 +149,29 @@ function Action({ store }: { store: Store }) {
 
       {/* ターゲット */}
       <div className="actions target" data-disable={actionPalette !== 'target'}>
+
+        {/* 攻撃 */}
         {targetPalette === 'attack' && (
           <>
             {store.target.melee.map(target => (
               <button
                 key={target.combatId}
                 onClick={() => { setActionPalette('confirmAttack'); setActionTarget(target); }} // ターゲットをセットし, 攻撃確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
+          </>
+        )}
+
+        {/* 牽制 */}
+        {targetPalette === 'feint' && (
+          <>
+            {store.target.melee.map(target => (
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmFeint'); setActionTarget(target); }} // ターゲットをセットし, 牽制確認パレットへ進む
               >{target.name}</button>
             ))}
             <button

@@ -58,6 +58,7 @@ export class Combat {
     //　コマンド入力待機
     await this.action.promise.then(() => {
       // 各種状態を更新
+      this.actor.attack.nextTurn()
       this.actor.defense.nextTurn()
       this.actor.health.nextTurn()
       // 自身を呼び出し, また次のターンへ進む

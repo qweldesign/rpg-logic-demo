@@ -2,13 +2,13 @@
 
 import { Combat as State } from '..'
 import { POSITION_KEYS } from '../Unit'
-import { type Judge, getRoll, judge } from './roll'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './types'
+import { type Judge, type Score, getRoll, judge, score } from './roll'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
-import { judgeAttack, judgeDefense, rollDmg, judgeEndurance } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance } from './resolver'
 
-export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult, judgeEndurance, judgeAttack, judgeDefense, rollDmg }
+export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
@@ -52,6 +52,7 @@ export class CombatAction {
   get availability() {
     return {
       attack: this.availabilityChecker.canAttack(),
+      feint: this.availabilityChecker.canFeint(),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
@@ -85,6 +86,10 @@ export class CombatAction {
     switch (action.key) {
       case 'attack':
         results = this.effects.attack(action.target)
+        break
+
+      case 'feint':
+        results = this.effects.feint(action.target)
         break
 
       case 'defense':
