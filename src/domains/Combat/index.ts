@@ -1,12 +1,14 @@
 // src/domains/Combat/index.ts
 
 import { type CombatUnitModel as UnitModel, CombatUnit as Unit } from './Unit'
+import { CombatFormation as Formation } from './Formation'
 
 // 全ての情報を集約・管理するクラス
 export class Combat {
   public round: number // 経過時間
   public turnIndex: number // 行動順
   public units: Unit[]
+  public formation: Formation | null
 
   constructor(models: UnitModel[]) {
     this.round = 1 // 1からカウント
@@ -14,6 +16,7 @@ export class Combat {
     this.units = models.map((model, i) => {
       return new Unit(model, i + 1) // combatIdは1からカウント
     })
+    this.formation = null
   }
 
   get actor() {
@@ -27,6 +30,7 @@ export class Combat {
       this.round++
       this.turnIndex -= this.units.length
     }
+    this.formation = new Formation(this.actor, this.units)
   }
 
   debug() {
