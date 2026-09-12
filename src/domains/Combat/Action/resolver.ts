@@ -1,7 +1,7 @@
 // src/domains/Combat/Action/resolver.ts
 
 import { type CombatUnit as Unit } from '../Unit'
-import { getRoll, judge, type AttackResult, type DefenseResult, type DmgResult } from '.'
+import { type Judge, getRoll, judge, type AttackResult, type DefenseResult, type DmgResult } from '.'
 
 // 攻撃の判定結果を返す
 export function judgeAttack(actor: Unit): AttackResult {
@@ -25,4 +25,9 @@ export function rollDmg(actor: Unit, target: Unit): DmgResult {
   const { count, mod, rate } = actor.attack.getDmgParams(dr, isChain)
   const roll = Math.max(0, Math.floor(getRoll(count, mod) * rate))
   return { roll, success: roll > 0, critical: roll >= 10 }
+}
+
+// 生命力判定の結果を返す (転倒判定・致死判定)
+export function judgeEndurance(target: Unit): Judge {
+  return judge(target.pre)
 }
