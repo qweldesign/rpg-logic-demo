@@ -17,10 +17,27 @@ export class CombatActionAvailability {
     return !this.state.actor.attack.ready
   }
 
+  //「攻撃」「全力攻撃」実行可否基本条件
+  // 自身が前方に配置されていること (武器の準備状態は含めない)
+  canAttackBase(): boolean {
+    return this.state.actor.position !== 'back'
+  }
+
   //「攻撃」実行可否取得
-  // 武器が準備状態, かつ自身が前方に配置されていること (暫定)
+  // 武器が準備状態 (暫定)
   canAttack(): boolean {
-    return this.state.actor.attack.ready && this.state.actor.position !== 'back'
+    return this.canAttackBase() && this.state.actor.attack.ready
+  }
+
+  //「全力攻撃」実行可否取得
+  canFullPowerAttack(): boolean {
+    return this.canAttackBase()
+  }
+  
+  // 「2回攻撃」実行可否取得
+  // 攻撃毎に準備を要する武器でないこと
+  canDoubleAttack(): boolean {
+    return this.canFullPowerAttack() && !this.state.actor.attack.needsReady
   }
 
   //「牽制」実行可否取得

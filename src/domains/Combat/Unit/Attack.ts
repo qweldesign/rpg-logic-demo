@@ -2,6 +2,7 @@
 
 import { type Dmg } from '../../Character'
 import { type CombatUnitModel as UnitModel, type CombatUnit as Unit } from '.'
+import { type FullPower } from '../Action'
 
 // 牽制の定義
 export type Feint = {
@@ -50,8 +51,9 @@ export class CombatAttack {
 
   // 攻撃 (命中判定) の目標値を取得
   // 各種状況による修正値 (バフ, デバフ, 全力攻撃オプションによる修正) を含める
-  getTarget(): number {
-    return Math.max(4, this.target)
+  getTarget(fullPower: FullPower): number {
+    const fullPowerMod = fullPower === 'level' ? 4 : 0
+    return Math.max(4, this.target + fullPowerMod)
   }
 
   // 攻撃型によるダメージ倍率を取得
@@ -60,16 +62,18 @@ export class CombatAttack {
   }
 
   // 攻撃 (ダメージ判定) のためのパラメータを取得
-  getDmgParams(dr: number, isChain: boolean): { count: number, mod: number, rate: number } {
-    const count = this.dmg.dmgDice
-    const mod = this.dmg.dmgMod - (isChain ? Math.floor(dr / 2) : dr)
+  getDmgParams(dr: number, isChain: boolean, fullPower: FullPower): { count: number, mod: number, rate: number } {
+    let count = this.dmg.dmgDice
+    count -= fullPower === 'dmg' ? 1 : 0 //「ダメージ安定」
+    let mod = this.dmg.dmgMod - (isChain ? Math.floor(dr / 2) : dr)
+    mod += fullPower === 'dmg' ? 6 : 0 //「ダメージ安定」
     const rate = this.getDmgRate()
     return { count, mod, rate }
   }
 
   // 攻撃 (ダメージ判定) の期待値を取得
-  getExpectedDmg(dr: number, isChain: boolean) {
-    const { count, mod, rate } = this.getDmgParams(dr, isChain)
+  getExpectedDmg(dr: number, isChain: boolean, fullPower: FullPower) {
+    const { count, mod, rate } = this.getDmgParams(dr, isChain, fullPower)
     return Math.max(0, Math.floor((count * 3.5 + mod) * rate))
   }
 }

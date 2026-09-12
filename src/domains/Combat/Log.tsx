@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
-import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult } from './Action'
+import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type FeintResult, type ActionResult } from './Action'
 
 let count = 0
 
@@ -31,7 +31,8 @@ export class CombatLog {
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {
       case 'attack':
-        return `${ACTION_LABELS[request.key]}:${this.createAttackResultLabel(request, results)}`
+        const attackLabel = request.options.fullPower !== 'none' ? '全力攻撃' : ACTION_LABELS[request.key]
+        return `${attackLabel}:${this.createAttackResultLabel(request, results)}`
 
       case 'feint':
         return `${ACTION_LABELS[request.key]}:${this.createFeintResultLabel(results)}`
@@ -82,7 +83,7 @@ export class CombatLog {
   private createMessages(request: ActionRequest, results: ActionResult[]): ReactNode[] {
     const actor = this.actor.name
     const key = request.key
-    const messages = []
+    const messages: ReactNode[] = []
     switch (key) {
       case 'ready': {
         messages.push(<>{`${actor} は ${this.actor.attack.name} を構えた`}</>)
@@ -119,6 +120,10 @@ export class CombatLog {
               else messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
               break
 
+            case 'feint':
+              this.pushFeintMessages(messages, actor, target, result.judge)
+              break
+
             case 'knockedDown':
               if (result.judge.success) messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
               else messages.push(<>{`${target} は 転倒した!!`}</>)
@@ -136,13 +141,7 @@ export class CombatLog {
         const target = request.target.name
         results.forEach(result => {
           if (result.type !== 'feint') return
-          messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた!`}</>)
-          if (result.judge.success) {
-            messages.push(<>{`出目は ${result.judge.roll}、牽制は成功した!`}</>)
-            messages.push(<>{`次のターン, ${target} は防御判定に -${result.judge.score} の修正が課せられる!`}</>)
-          } else {
-            messages.push(<>{`出目は ${result.judge.roll}、牽制は失敗した...`}</>)
-          }
+          this.pushFeintMessages(messages, actor, target, result.judge)
         })
         break
       }
@@ -182,5 +181,15 @@ export class CombatLog {
   private getResultLabel(judge: Judge): string {
     return judge.success && judge.critical ? 'クリティカル!!'
       : judge.success && !judge.critical ? '成功!' : '失敗!'
+  }
+
+  private pushFeintMessages(messages: ReactNode[], actor: string, target: string, judge: FeintResult) {
+    messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた!`}</>)
+    if (judge.success) {
+      messages.push(<>{`出目は ${judge.roll}、牽制は成功した!`}</>)
+      messages.push(<>{`次のターン, ${target} は防御判定に -${judge.score} の修正が課せられる!`}</>)
+    } else {
+      messages.push(<>{`出目は ${judge.roll}、牽制は失敗した...`}</>)
+    }
   }
 }
