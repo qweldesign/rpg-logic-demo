@@ -1,7 +1,14 @@
 // src/domains/Combat/Unit/Attack.ts
 
 import { type Dmg } from '../../Character'
-import { type CombatUnitModel as UnitModel } from '.'
+import { type CombatUnitModel as UnitModel, type CombatUnit as Unit } from '.'
+
+// 牽制の定義
+export type Feint = {
+  currentTurn: boolean // true: 牽制を行ったターン (まだ適用されない), false: 次ターン以降 (適用可能)
+  target: Unit
+  score: number
+}
 
 export class CombatAttack {
   // 設定値
@@ -11,6 +18,7 @@ export class CombatAttack {
   public dmgName: string
   public needsReady: boolean
   // 状態値
+  public feint: Feint | null
   public ready: boolean // 準備の可否
 
   constructor(model: UnitModel) {
@@ -19,7 +27,18 @@ export class CombatAttack {
     this.dmg = model.equipments.getDmg(model.dmgMod)
     this.dmgName = model.equipments.getDmgName(model.dmgMod)
     this.needsReady = model.equipments.weapon.ready
+    this.feint = null
     this.ready = true
+  }
+
+  nextTurn() {
+    if (this.feint && this.feint.currentTurn) {
+      // 牽制を行ったターンが終わったので, 次ターンに適用可能な状態としてマークする
+      this.feint.currentTurn = false
+    } else if (this.feint) {
+      // 適用されないまま次のターンを迎えたので, 牽制を破棄する
+      this.feint = null
+    }
   }
 
   // 攻撃 (命中判定) の目標値を取得

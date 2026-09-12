@@ -17,6 +17,12 @@ export class CombatActionAvailability {
     return this.state.actor.position !== 'back'
   }
 
+  //「牽制」実行可否取得
+  // 「攻撃」と同条件
+  canFeint(): boolean {
+    return this.canAttack()
+  }
+
   //「全力防御」実行可否取得
   // いつでも (暫定)
   canDefense(): boolean {

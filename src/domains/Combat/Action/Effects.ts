@@ -2,7 +2,7 @@
 
 import { Combat as State } from '../'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeRecovery, judgeKnockedDown } from '.'
+import { type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown } from '.'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -23,7 +23,7 @@ export class CombatActionEffects {
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
     // 防御判定
-    const defenseResults = this.tryDefend(target, !attackJudge.critical, () => judgeDefense(target))
+    const defenseResults = this.tryDefend(target, !attackJudge.critical, () => judgeDefense(actor, target))
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)
     }
@@ -80,6 +80,16 @@ export class CombatActionEffects {
     }
 
     return results
+  }
+
+  //「牽制」実行
+  feint(target: Unit): ActionResult[] {
+    const actor = this.state.actor
+    const feintJudge = judgeFeint(actor, target)
+    if (feintJudge.success) {
+      actor.attack.feint = { currentTurn: true, target, score: feintJudge.score }
+    }
+    return [{ type: 'feint', judge: feintJudge }]
   }
 
   //「全力防御」実行
