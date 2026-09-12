@@ -88,6 +88,16 @@ export class CombatLog {
               else if (!result.judge.critical) messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
               else messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
               break
+
+            case 'knockedDown':
+              if (result.judge.success) messages.push(<>{`${target.name} は 朦朧状態に陥った!`}</>)
+              else messages.push(<>{`${target.name} は 転倒した!!`}</>)
+              break
+
+            case 'fatal':
+              if (result.judge.success) messages.push(<>{`${target.name} は 気絶した...`}</>)
+              else messages.push(<>{`${target.name} は 死亡した...`}</>)
+              break
           }
         })
         break
