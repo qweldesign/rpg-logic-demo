@@ -16,6 +16,7 @@ export class CombatAction {
   public round: number
   public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
   public promise: Promise<void>
+  public ready: Promise<void> // 開幕時の自動実行 (朦朧回復・立ち上がり) が完了したら解決
   private resolve!: () => void
   private readonly availabilityChecker: Availability
   private readonly effects: Effects
@@ -31,6 +32,16 @@ export class CombatAction {
     this.promise = new Promise(resolve => {
       this.resolve = resolve
     })
+
+    if (this.actor.health.stunned) {
+      // 朦朧状態の場合は「回復」を自動実行する
+      this.ready = this.execute({ key: 'recovery', options: {} })
+    } else if (!this.actor.health.stunned && this.actor.health.prone) {
+      // 転倒状態の場合は「立ち上がり」を自動実行する
+      this.ready = this.execute({ key: 'standup', options: {} })
+    } else {
+      this.ready = Promise.resolve()
+    }
   }
 
   get actor() {
@@ -70,6 +81,7 @@ export class CombatAction {
 
     // 行動実行
     let results: ActionResult[] = []
+
     switch (action.key) {
       case 'attack':
         results = this.effects.attack(action.target)
@@ -83,6 +95,14 @@ export class CombatAction {
         this.effects.move(action.options.position)
         break
 
+      case 'recovery':
+        results = this.effects.recovery()
+        break
+
+      case 'standup':
+        this.effects.standup()
+        break
+
       default: // case 'wait':
         this.effects.wait()
     }
@@ -91,8 +111,19 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
+    // 行動終了分岐
+    // 回復成功時・立ち上がりはターンを終えず, 同じ actor の行動を続ける
+    let nextTurn = true
+    const recoveryResult = results.find(result => result.type === 'recovery')
+    if ((action.key === 'recovery' && recoveryResult?.judge.success) || action.key === 'standup') {
+      this.unlocked = true
+      nextTurn = false
+    }
+
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    this.resolve()
+    if (nextTurn) {
+      this.resolve()
+    }
   }
 }

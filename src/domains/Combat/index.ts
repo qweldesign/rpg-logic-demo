@@ -48,10 +48,13 @@ export class Combat {
     await this.playLog()
     // コマンドパレット初期化
     this.action = new Action(this)
+    // 開幕時の自動実行 (朦朧回復・立ち上がり) の完了を待つ
+    await this.action.ready
     //　コマンド入力待機
     await this.action.promise.then(() => {
-      // 行動者の能動防御 (受け・止めの試行回数, 全力防御) をリセット
+      // 各種状態を更新
       this.actor.defense.nextTurn()
+      this.actor.health.nextTurn()
       // 自身を呼び出し, また次のターンへ進む
       this.debug()
       this.nextTurn()
