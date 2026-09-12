@@ -3,11 +3,12 @@
 import { Combat as State } from '../'
 import { POSITION_KEYS } from '../Unit'
 import { type Judge, getRoll, judge } from './roll'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult } from './types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
+import { judgeAttack, judgeDefense, rollDmg } from './resolver'
 
-export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult }
+export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult, judgeAttack, judgeDefense, rollDmg }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
@@ -67,9 +68,10 @@ export class CombatAction {
     this.unlocked = false
 
     // 行動実行
+    let results: ActionResult[] = []
     switch (action.key) {
       case 'attack':
-        this.effects.attack(action.targets[0])
+        results = this.effects.attack(action.targets[0])
         break
 
       case 'move':
@@ -82,7 +84,7 @@ export class CombatAction {
 
     // ログを更新
     const log = this.state.logs[0]
-    log.receiveResults(action)
+    log.receiveResults(action, results)
 
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
