@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance } from '.'
+import { type FullPower, type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance } from '.'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -18,20 +18,47 @@ export class CombatActionEffects {
     return []
   }
 
-  //「攻撃」実行 (判定結果に基づき, HPへのダメージ反映と朦朧・転倒・気絶までを処理する)
-  attack(target: Unit): ActionResult[] {
+  //「攻撃」「全力攻撃」実行
+  attack(target: Unit, fullPower: FullPower): ActionResult[] {
+    const actor = this.state.actor
+    const results: ActionResult[] = []
+
+    // 次のターンまで能動防御 (受け・止め・よけ) 不可
+    if (fullPower !== 'none') actor.defense.isFullAttackTurn = true
+
+    if (fullPower === 'feint') {
+      // 「牽制即攻撃」: 牽制を即座に適用した上で, そのまま攻撃する
+      results.push(...this.feint(target, true))
+      results.push(...this.attackRoutine(target, fullPower))
+    } else if (fullPower === 'double') {
+      // 「2回攻撃」: 対象が気絶しなければ, 続けてもう1回攻撃する
+      results.push(...this.attackRoutine(target, fullPower))
+      if (!target.health.unconscious) {
+        results.push(...this.attackRoutine(target, fullPower))
+      }
+    } else {
+      // 通常攻撃, および全力攻撃オプション「ダメージ安定」「技能値+4」
+      results.push(...this.attackRoutine(target, fullPower))
+    }
+
+    return results
+  }
+
+  // 攻撃1回分の判定・効果適用 (判定結果に基づき, HPへのダメージ反映と朦朧・転倒・気絶までを処理する)
+  private attackRoutine(target: Unit, fullPower: FullPower): ActionResult[] {
     const results: ActionResult[] = []
     const actor = this.state.actor
 
     // 攻撃判定
-    const attackJudge = judgeAttack(actor)
+    const attackJudge = judgeAttack(actor, fullPower)
     // 武器の準備状態を更新 (準備の要る武器の場合, 攻撃後は非準備状態になる)
     actor.attack.ready = !actor.attack.needsReady
     results.push({ type: 'attack', judge: { ...attackJudge, ready: actor.attack.ready } })
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
     // 防御判定
-    const defenseResults = this.tryDefend(target, !attackJudge.critical, () => judgeDefense(actor, target))
+    const canDefend = !attackJudge.critical && target.defense.canDefend
+    const defenseResults = this.tryDefend(target, canDefend, () => judgeDefense(actor, target))
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)
       if (defenseResult.type === 'defense' && defenseResult.judge.success) {
@@ -40,7 +67,7 @@ export class CombatActionEffects {
     }
 
     // ダメージ判定
-    const dmgJudge = rollDmg(actor, target)
+    const dmgJudge = rollDmg(actor, target, fullPower)
     results.push({ type: 'dmg', judge: dmgJudge })
 
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
@@ -77,7 +104,7 @@ export class CombatActionEffects {
     const results: ActionResult[] = []
     const defenseJudges = getDefenseJudges()
 
-    // 防御不能攻撃 (クリティカル) の場合は空の結果を返す
+    // 防御不能攻撃 (クリティカル) または対象が全力攻撃ターンの場合は空の結果を返す
     if (!canDefend) return results
 
     // 「受け」「止め」試行回数を加算
@@ -101,11 +128,15 @@ export class CombatActionEffects {
   }
 
   //「牽制」実行
-  feint(target: Unit): ActionResult[] {
+  feint(target: Unit, isImmediate: boolean = false): ActionResult[] {
     const actor = this.state.actor
     const feintJudge = judgeFeint(actor, target)
-    if (feintJudge.success) {
-      actor.attack.feint = { currentTurn: true, target, score: feintJudge.score }
+    if (isImmediate && actor.attack.feint && feintJudge.success) {
+      // 全力攻撃の牽制で, かつ前ターンに牽制を実行していた場合は, 効果の高い方を適用
+      const prevScore = actor.attack.feint.score
+      actor.attack.feint = { currentTurn: !isImmediate, target, score: Math.max(prevScore, feintJudge.score) }
+    } else if (feintJudge.success) {
+      actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score }
     }
     return [{ type: 'feint', judge: feintJudge }]
   }

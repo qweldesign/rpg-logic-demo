@@ -31,7 +31,8 @@ export class CombatLog {
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {
       case 'attack':
-        return `${ACTION_LABELS[request.key]}:${this.createAttackResultLabel(request, results)}`
+        const attackLabel = request.options.fullPower !== 'none' ? '全力攻撃' : ACTION_LABELS[request.key]
+        return `${attackLabel}:${this.createAttackResultLabel(request, results)}`
 
       case 'feint':
         return `${ACTION_LABELS[request.key]}:${this.createFeintResultLabel(results)}`
@@ -87,7 +88,7 @@ export class CombatLog {
         messages.push(<>{`${actor} は ${this.actor.attack.name} を構えた`}</>)
         break
       }
-      case 'attack': {
+      case 'attack': case 'feint': {
         const target = request.target
         results.forEach(result => {
           switch (result.type) {
@@ -117,6 +118,16 @@ export class CombatLog {
               else messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
               break
 
+            case 'feint':
+              messages.push(<>{`${actor} は ${target.name} に対して牽制を仕掛けた!`}</>)
+              if (result.judge.success) {
+                messages.push(<>{`出目は ${result.judge.roll}、牽制は成功した!`}</>)
+                messages.push(<>{`次のターン, ${target.name} は防御判定に -${result.judge.score} の修正が課せられる!`}</>)
+              } else {
+                messages.push(<>{`出目は ${result.judge.roll}、牽制は失敗した...`}</>)
+              }
+              break
+
             case 'knockedDown':
               if (result.judge.success) messages.push(<>{`${target.name} は 朦朧状態に陥った!`}</>)
               else messages.push(<>{`${target.name} は 転倒した!!`}</>)
@@ -126,20 +137,6 @@ export class CombatLog {
               if (result.judge.success) messages.push(<>{`${target.name} は 気絶した...`}</>)
               else messages.push(<>{`${target.name} は 死亡した...`}</>)
               break
-          }
-        })
-        break
-      }
-      case 'feint': {
-        const target = request.target
-        results.forEach(result => {
-          if (result.type !== 'feint') return
-          messages.push(<>{`${actor} は ${target.name} に対して牽制を仕掛けた!`}</>)
-          if (result.judge.success) {
-            messages.push(<>{`出目は ${result.judge.roll}、牽制は成功した!`}</>)
-            messages.push(<>{`次のターン, ${target.name} は防御判定に -${result.judge.score} の修正が課せられる!`}</>)
-          } else {
-            messages.push(<>{`出目は ${result.judge.roll}、牽制は失敗した...`}</>)
           }
         })
         break

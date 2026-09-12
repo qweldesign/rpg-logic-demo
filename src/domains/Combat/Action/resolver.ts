@@ -1,11 +1,11 @@
 // src/domains/Combat/Action/resolver.ts
 
 import { type CombatUnit as Unit } from '../Unit'
-import { type Judge, getRoll, judge, score, type AttackResult, type DefenseResult, type DmgResult, type FeintResult } from '.'
+import { type Judge, getRoll, judge, score, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult } from '.'
 
 // 攻撃の判定結果を返す
-export function judgeAttack(actor: Unit): Omit<AttackResult, 'ready'> {
-  const attackTarget = actor.attack.getTarget()
+export function judgeAttack(actor: Unit, fullPower: FullPower): Omit<AttackResult, 'ready'> {
+  const attackTarget = actor.attack.getTarget(fullPower)
   return judge(attackTarget)
 }
 
@@ -38,9 +38,9 @@ export function judgeDefense(actor: Unit, target: Unit): Omit<DefenseResult, 're
 }
 
 // ダメージの判定結果を返す
-export function rollDmg(actor: Unit, target: Unit): DmgResult {
+export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower): DmgResult {
   const { dr, isChain } = target.defense
-  const { count, mod, rate } = actor.attack.getDmgParams(dr, isChain)
+  const { count, mod, rate } = actor.attack.getDmgParams(dr, isChain, fullPower)
   const roll = Math.max(0, Math.floor(getRoll(count, mod) * rate))
   return { roll, success: roll > 0, critical: roll >= 10 }
 }
