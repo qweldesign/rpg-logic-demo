@@ -51,6 +51,8 @@ export class Combat {
   // formation, log, action 初期化
   private async startTurn(): Promise<void> {
     this.formation = new Formation(this.actor, this.units)
+    // 前ターンのログを, その行動者の履歴として保持 (Summaryの行動ラベル表示用)
+    if (this.logs[0]) this.logs[0].actor.history = this.logs[0]
     this.logs.unshift(new Log(this.actor))
     await this.playLog()
     this.action = new Action(this)
