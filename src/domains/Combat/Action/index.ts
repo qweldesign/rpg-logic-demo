@@ -51,6 +51,7 @@ export class CombatAction {
   // 実行可否
   get availability() {
     return {
+      ready: this.availabilityChecker.canReady(),
       attack: this.availabilityChecker.canAttack(),
       feint: this.availabilityChecker.canFeint(),
       defense: this.availabilityChecker.canDefense(),
@@ -84,6 +85,10 @@ export class CombatAction {
     let results: ActionResult[] = []
 
     switch (action.key) {
+      case 'ready':
+        results = this.effects.ready()
+        break
+
       case 'attack':
         results = this.effects.attack(action.target)
         break
