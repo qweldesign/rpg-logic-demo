@@ -40,11 +40,16 @@ export class Combat {
   }
 
   // turnIndex / round を進める
+  // 倒れているユニットのターンをパス 
   private advanceTurn(): void {
-    this.turnIndex++
-    if (this.turnIndex > this.units.length) {
-      this.round++
-      this.turnIndex -= this.units.length
+    let isAlive = false
+    while (!isAlive) {
+      this.turnIndex++
+      if (this.turnIndex > this.units.length) {
+        this.round++
+        this.turnIndex -= this.units.length
+      }
+      isAlive = !this.actor.health.unconscious
     }
   }
 

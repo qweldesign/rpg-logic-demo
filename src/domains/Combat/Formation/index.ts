@@ -65,12 +65,12 @@ export class CombatFormation {
 
   // 味方対象取得
   getAllies(): Unit[] {
-    return this.units.filter(unit => unit.side === this.actor.side)
+    return this.units.filter(unit => unit.side === this.actor.side && !unit.health.unconscious)
   }
 
   // 敵対象取得
   getEnemies(): Unit[] {
-    return this.units.filter(unit => unit.side !== this.actor.side)
+    return this.units.filter(unit => unit.side !== this.actor.side && !unit.health.unconscious)
   }
 
   // 近接攻撃対象取得
@@ -79,17 +79,17 @@ export class CombatFormation {
     switch (this.actor.position) {
       case 'left':
         return enemies.filter(unit => {
-          return unit.position === 'center' || unit.position === 'right'
+          return (unit.position === 'center' || unit.position === 'right') && !unit.health.unconscious
         })
 
       case 'center':
         return enemies.filter(unit => {
-          return unit.position !== 'back'
+          return unit.position !== 'back' && !unit.health.unconscious
         })
 
       case 'right':
         return enemies.filter(unit => {
-          return unit.position === 'left' || unit.position === 'center'
+          return (unit.position === 'left' || unit.position === 'center') && !unit.health.unconscious
         })
 
       default: // case 'back':
