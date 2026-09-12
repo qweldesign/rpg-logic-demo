@@ -70,14 +70,14 @@ function Edit() {
     // 装備一覧を更新する関数
     const updateEquipList = (st: number) => {
       const weaponList = Object.entries(WEAPONS).filter(
-        ([, weapon]) => weapon.requiredST <= st
+        ([, weapon]) => weapon.requiredST <= st && !weapon.enemyOnly
       ) as [WeaponKey, Weapon][]
       const shieldList = state.equips.weapon.twoHanded ? []
         :Object.entries(SHIELDS).filter(
           ([, shield]) => shield.requiredST <= st
         ) as [ShieldKey, Shield][]
       const armorList = Object.entries(ARMORS).filter(
-        ([, armor]) => armor.requiredST <= st
+        ([, armor]) => armor.requiredST <= st && !armor.enemyOnly
       ) as [ArmorKey, Armor][]
 
       return { weaponList, shieldList, armorList }

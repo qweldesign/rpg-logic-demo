@@ -2,7 +2,7 @@
 
 // 武器のキー
 export const WEAPON_KEYS = [
-  '細剣', '長剣', '戦棍', '戦斧', '長槍', '大剣', '長杖', '鉾槍'
+  '短剣', '小剣', '棍棒', '手斧', '細剣', '長剣', '戦棍', '戦斧', '長槍', '大剣', '長杖', '鉾槍'
 ] as const
 
 export type WeaponKey = typeof WEAPON_KEYS[number]
@@ -14,17 +14,22 @@ export type Weapon = {
   twoHanded: boolean // 両手が必要か
   ready: boolean // 準備が必要か
   requiredST: number // 必要筋力
+  enemyOnly: boolean // 敵専用
 }
 
 export const WEAPONS: Record<WeaponKey, Weapon> = {
-  '細剣': { dmgBase: 4, dmgType: 2, twoHanded: false, ready: false, requiredST: 10 },
-  '長剣': { dmgBase: 5, dmgType: 1, twoHanded: false, ready: false, requiredST: 10 },
-  '戦棍': { dmgBase: 6, dmgType: 0, twoHanded: false, ready: false, requiredST: 10 },
-  '戦斧': { dmgBase: 8, dmgType: 1, twoHanded: false, ready: true, requiredST: 12 },
-  '長槍': { dmgBase: 5, dmgType: 2, twoHanded: true, ready: false, requiredST: 11 },
-  '大剣': { dmgBase: 6, dmgType: 1, twoHanded: true, ready: false, requiredST: 11 },
-  '長杖': { dmgBase: 8, dmgType: 0, twoHanded: true, ready: false, requiredST: 11 },
-  '鉾槍': { dmgBase: 12, dmgType: 1, twoHanded: true, ready: true, requiredST: 13 }
+  '短剣': { dmgBase: 3, dmgType: 2, twoHanded: false, ready: false, requiredST: 8, enemyOnly: true },
+  '小剣': { dmgBase: 4, dmgType: 1, twoHanded: false, ready: false, requiredST: 8, enemyOnly: true }, 
+  '棍棒': { dmgBase: 5, dmgType: 0, twoHanded: false, ready: false, requiredST: 8, enemyOnly: true },
+  '手斧': { dmgBase: 6, dmgType: 1, twoHanded: false, ready: true, requiredST: 10, enemyOnly: true },
+  '細剣': { dmgBase: 4, dmgType: 2, twoHanded: false, ready: false, requiredST: 10, enemyOnly: false },
+  '長剣': { dmgBase: 5, dmgType: 1, twoHanded: false, ready: false, requiredST: 10, enemyOnly: false },
+  '戦棍': { dmgBase: 6, dmgType: 0, twoHanded: false, ready: false, requiredST: 10, enemyOnly: false },
+  '戦斧': { dmgBase: 8, dmgType: 1, twoHanded: false, ready: true, requiredST: 12, enemyOnly: false },
+  '長槍': { dmgBase: 5, dmgType: 2, twoHanded: true, ready: false, requiredST: 11, enemyOnly: false },
+  '大剣': { dmgBase: 6, dmgType: 1, twoHanded: true, ready: false, requiredST: 11, enemyOnly: false },
+  '長杖': { dmgBase: 8, dmgType: 0, twoHanded: true, ready: false, requiredST: 11, enemyOnly: false },
+  '鉾槍': { dmgBase: 12, dmgType: 1, twoHanded: true, ready: true, requiredST: 13, enemyOnly: false }
 } as const
 
 // ダメージの定義
@@ -37,6 +42,10 @@ export type Dmg = {
 
 // ダメージステップ
 const DMG_STEP: Omit<Dmg, 'dmgType'>[] = [
+  { name: '1d-4', dmgDice: 1, dmgMod: -4 }, // 0
+  { name: '1d-3', dmgDice: 1, dmgMod: -3 }, // 1
+  { name: '1d-2', dmgDice: 1, dmgMod: -2 }, // 2
+  { name: '1d-1', dmgDice: 1, dmgMod: -1 }, // 3
   { name: '1d', dmgDice: 1, dmgMod: 0 }, // 4
   { name: '1d+1', dmgDice: 1, dmgMod: 1 }, // 5
   { name: '1d+2', dmgDice: 1, dmgMod: 2 }, // 6
@@ -72,7 +81,7 @@ export const SHIELDS: Record<ShieldKey, Shield> = {
 
 // 服・鎧のキー
 export const ARMOR_KEYS = [
-  '革服', '革鎧', 'チェインメイル', 'プレイトメイル'
+  '服', '革服', '革鎧', 'チェインメイル', 'プレイトメイル'
 ] as const
 
 export type ArmorKey = typeof ARMOR_KEYS[number]
@@ -82,13 +91,15 @@ export type Armor = {
   dr: number // ダメージ抵抗
   isChain: boolean // 環状構造か
   requiredST: number // 必要筋力
+  enemyOnly: boolean // 敵専用
 }
 
 export const ARMORS: Record<ArmorKey, Armor> = {
-  '革服': { dr: 1, isChain: false, requiredST: 10 },
-  '革鎧': { dr: 2, isChain: false, requiredST: 11 },
-  'チェインメイル': { dr: 3, isChain: true, requiredST: 12 },
-  'プレイトメイル': { dr: 4, isChain: false, requiredST: 13 }
+  '服': { dr: 1, isChain: true, requiredST: 8, enemyOnly: true },
+  '革服': { dr: 1, isChain: false, requiredST: 10, enemyOnly: false },
+  '革鎧': { dr: 2, isChain: false, requiredST: 11, enemyOnly: false },
+  'チェインメイル': { dr: 3, isChain: true, requiredST: 12, enemyOnly: false },
+  'プレイトメイル': { dr: 4, isChain: false, requiredST: 13, enemyOnly: false }
 } as const
 
 // 装備管理を司るクラス
@@ -137,7 +148,7 @@ export class Equipments {
   getDmg(mod: number): Dmg {
     const { dmgBase, dmgType } = this.weapon
     const totalDmg = dmgBase + mod
-    const step = DMG_STEP[Math.max(0, Math.min(totalDmg - 4, DMG_STEP.length - 1))]
+    const step = DMG_STEP[Math.max(0, Math.min(totalDmg, DMG_STEP.length - 1))]
     return { ...step, dmgType }
   }
 
