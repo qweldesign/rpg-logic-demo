@@ -45,7 +45,7 @@ export function rollDmg(actor: Unit, target: Unit): DmgResult {
   return { roll, success: roll > 0, critical: roll >= 10 }
 }
 
-// 生命力判定の結果を返す (転倒判定・致死判定)
+// 生命力判定の結果を返す (転倒判定・回復判定・致死判定)
 export function judgeEndurance(target: Unit): Judge {
   return judge(target.pre)
 }

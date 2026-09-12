@@ -65,6 +65,7 @@ export class CombatUnit {
   // 各種状態を更新
   nextTurn() {
     this.defense.nextTurn()
+    this.health.nextTurn()
   }
 
   // Summary 表示用ラベル取得

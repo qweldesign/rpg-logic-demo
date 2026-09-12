@@ -100,6 +100,20 @@ export class CombatActionEffects {
     this.state.actor.position = position
   }
 
+  // 朦朧状態からの「回復」実行 (自動実行)
+  recovery(): ActionResult[] {
+    const recoveryJudge = judgeEndurance(this.state.actor)
+    if (recoveryJudge.success) {
+      this.state.actor.health.stunned = false // 回復
+    }
+    return [{ type: 'recovery', judge: recoveryJudge }]
+  }
+
+  // 転倒状態からの「立ち上がり」実行 (自動実行)
+  standup() {
+    this.state.actor.health.standupTurn = true // 立ち上がり
+  }
+
   //「待機」実行
   wait() {
     // 状態変更なし

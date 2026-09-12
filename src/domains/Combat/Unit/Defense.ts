@@ -70,17 +70,26 @@ export class CombatDefense {
   // 各種戦闘の状況による修正値 (牽制のターゲットによる修正) を含めない
   // 「受け」
   get parryTarget() {
-    return Math.max(4, this.ev.self + this.ev.weapon)
+    let mod = 0
+    if (this.self.health.stunned) mod -= 4
+    else if (this.self.health.prone) mod -= 2
+    return Math.max(4, this.ev.self + this.ev.weapon + mod)
   }
 
   // 「止め」
   get blockTarget() {
-    return Math.max(4, this.ev.self + this.ev.shield)
+    let mod = 0
+    if (this.self.health.stunned) mod -= 4
+    else if (this.self.health.prone) mod -= 2
+    return Math.max(4, this.ev.self + this.ev.shield + mod)
   }
   
   // 「よけ」
   get dodgeTarget() {
-    return Math.max(4, this.ev.self - this.ev.wt)
+    let mod = 0
+    if (this.self.health.stunned) mod -= 4
+    else if (this.self.health.prone) mod -= 2
+    return Math.max(4, this.ev.self - this.ev.wt + mod)
   }
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得

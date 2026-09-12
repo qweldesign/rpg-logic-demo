@@ -35,6 +35,7 @@ export class Combat {
   async nextTurn() {
     this.advanceTurn()
     await this.startTurn()
+    await this.runOpeningActions()
     await this.waitForCommand()
   }
 
@@ -56,6 +57,12 @@ export class Combat {
     this.logs.unshift(new Log(this.actor))
     await this.playLog()
     this.action = new Action(this)
+  }
+
+  // 開幕時の自動実行
+  // 朦朧回復・立ち上がりの完了を待つ
+  private async runOpeningActions(): Promise<void> {
+    await this.action!.ready
   }
 
   // コマンド入力待機 → 状態更新 → 次のターンへ再帰
