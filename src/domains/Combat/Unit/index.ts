@@ -54,7 +54,7 @@ export class CombatUnit {
     this.position = 'back'
     this.attack = new Attack(model)
     this.defense = new Defense(this, model)
-    this.health = new Health(maxHp)
+    this.health = new Health(this, maxHp)
     this.history = null
   }
 }
