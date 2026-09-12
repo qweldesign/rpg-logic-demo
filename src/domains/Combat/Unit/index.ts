@@ -3,6 +3,7 @@
 import { Equipments } from '../../Character'
 import { CombatAttack as Attack } from './Attack'
 import { type DefenseType, type DefenseTarget, CombatDefense as Defense } from './Defense'
+import { CombatHealth as Health } from './Health'
 
 export { type DefenseType, type DefenseTarget }
 
@@ -41,14 +42,16 @@ export class CombatUnit {
   public position: Position
   public attack: Attack
   public defense: Defense
+  public health: Health
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { name } = model
+    const { name, maxHp } = model
     this.combatId = combatId
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
     this.position = 'back'
     this.attack = new Attack(model)
     this.defense = new Defense(this, model)
+    this.health = new Health(maxHp)
   }
 }
