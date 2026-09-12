@@ -62,6 +62,11 @@ export class CombatUnit {
     this.history = null
   }
 
+  // 各種状態を更新
+  nextTurn() {
+    this.defense.nextTurn()
+  }
+
   // Summary 表示用ラベル取得
   get label(): string {
     return this.health.label

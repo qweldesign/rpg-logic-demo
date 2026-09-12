@@ -61,6 +61,7 @@ export class Combat {
   // コマンド入力待機 → 状態更新 → 次のターンへ再帰
   private async waitForCommand(): Promise<void> {
     await this.action!.promise.then(() => {
+      this.actor.nextTurn()
       this.debug()
       this.nextTurn()
     })
