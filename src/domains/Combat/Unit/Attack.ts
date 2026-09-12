@@ -40,11 +40,17 @@ export class CombatAttack {
     return this.dmg.dmgType === 2 ? 2 : this.dmg.dmgType === 1 ? 1.5 : 1
   }
 
-  // 攻撃 (ダメージ判定) の期待値を取得
-  getExpectedDmg(dr: number = 0, isChain: boolean = false) {
+  // 攻撃 (ダメージ判定) のためのパラメータを取得
+  getDmgParams(dr: number, isChain: boolean): { count: number, mod: number, rate: number } {
     const count = this.dmg.dmgDice
     const mod = this.dmg.dmgMod - (isChain ? Math.floor(dr / 2) : dr)
     const rate = this.getDmgRate()
+    return { count, mod, rate }
+  }
+
+  // 攻撃 (ダメージ判定) の期待値を取得
+  getExpectedDmg(dr: number, isChain: boolean) {
+    const { count, mod, rate } = this.getDmgParams(dr, isChain)
     return Math.max(0, Math.floor((count * 3.5 + mod) * rate))
   }
 }
