@@ -1,11 +1,12 @@
 // src/domains/Combat/Action/types.ts
 
-import { type DefenseType, type Position } from '../Unit'
+import { type DefenseType, type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge } from '.'
 
-export const ACTION_KEYS = ['move', 'wait'] as const
+export const ACTION_KEYS = ['attack', 'move', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
+  attack: '攻撃',
   move: '移動',
   wait: '待機'
 } as const
@@ -27,6 +28,7 @@ export type ActionOptions = {
 
 // 行動キーとオプションの組み合わせ
 export type ActionRequest =
+  | { key: 'attack', options: {}, target: Unit }
   | { key: 'move', options: { position: Position } }
   | { key: 'wait', options: {} }
 
