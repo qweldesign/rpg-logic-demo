@@ -2,11 +2,12 @@
 
 import { Combat as State } from '../'
 import { POSITION_KEYS } from '../Unit'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest } from './types'
+import { type Judge, getRoll, judge } from './roll'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
 
-export { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest }
+export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {

@@ -1,6 +1,7 @@
 // src/domains/Combat/Action/types.ts
 
-import { type Position } from '../Unit'
+import { type DefenseType, type Position } from '../Unit'
+import { type Judge } from '.'
 
 export const ACTION_KEYS = ['move', 'wait'] as const
 
@@ -28,3 +29,14 @@ export type ActionOptions = {
 export type ActionRequest =
   | { key: 'move', options: { position: Position } }
   | { key: 'wait', options: {} }
+
+// 攻撃判定結果
+export type AttackResult = Judge
+
+// 防御判定結果
+export type DefenseResult = Judge & {
+  type: DefenseType
+}
+
+// ダメージ判定結果
+export type DmgResult = Judge
