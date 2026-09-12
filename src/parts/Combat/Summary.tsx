@@ -13,7 +13,7 @@ function Summary({ state }: { state: State }) {
           <div className={`summary__row ${unit === state.actor ? 'is-current' : ''} is-${unit.health.condition}`} key={i}>
             <div>{unit.name}</div>
             <div>{unit.health.Hp} / {unit.health.maxHp}</div>
-            <div>&nbsp;</div>
+            <div>{unit.label}</div>
             <div>{unit.history?.label ?? ''}</div>
           </div>
         ))}
