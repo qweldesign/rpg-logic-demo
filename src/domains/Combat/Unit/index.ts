@@ -57,4 +57,9 @@ export class CombatUnit {
     this.health = new Health(this, maxHp)
     this.history = null
   }
+
+  // Summary 表示用ラベル取得
+  get label(): string {
+    return this.health.label
+  }
 }

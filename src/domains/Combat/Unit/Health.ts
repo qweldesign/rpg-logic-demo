@@ -55,4 +55,12 @@ export class CombatHealth {
     else if (ratio < 2 / 3) return 'injured'
     else return 'normal'
   }
+
+  // Summary 表示用ラベル取得 (深刻度が高い状態を優先して1つ返す)
+  get label(): string {
+    if (this.unconscious) return '気絶'
+    if (this.prone) return '転倒'
+    if (this.stunned) return '朦朧状態'
+    return ''
+  }
 }
