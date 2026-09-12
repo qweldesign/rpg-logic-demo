@@ -2,7 +2,7 @@
 
 import { Combat as State } from '../'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeKnockedDown } from '.'
+import { type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeKnockedDown } from '.'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -22,11 +22,10 @@ export class CombatActionEffects {
     results.push({ type: 'attack', judge: attackJudge })
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
-    // 防御判定 (攻撃判定がクリティカルであればスキップ)
-    if (!attackJudge.critical) {
-      const defenseJudge = judgeDefense(target)
-      results.push({ type: 'defense', judge: defenseJudge })
-      if (defenseJudge.success) return results // 防御成功時はここで処理を止める
+    // 防御判定
+    const defenseResults = this.tryDefend(target, !attackJudge.critical, () => judgeDefense(target))
+    for (const defenseResult of defenseResults) {
+      results.push(defenseResult)
     }
 
     // ダメージ判定
@@ -55,6 +54,38 @@ export class CombatActionEffects {
     }
 
     return results
+  }
+
+  // 防御試行
+  private tryDefend(target: Unit, canDefend: boolean, getDefenseJudges: () => DefenseResult[]): ActionResult[] {
+    const results: ActionResult[] = []
+    const defenseJudges = getDefenseJudges()
+
+    // 防御不能攻撃 (クリティカル) の場合は空の結果を返す
+    if (!canDefend) return results
+
+    // 「受け」「止め」試行回数を加算
+    for (const defenseJudge of defenseJudges) {
+      if (defenseJudge.type === 'parry') {
+        target.defense.parryCount++
+      } else if (defenseJudge.type === 'block') {
+        target.defense.blockCount++
+      }
+
+      // 判定結果をpush
+      results.push({ type: 'defense', judge: defenseJudge })
+
+      // 防御に成功したら処理を抜ける
+      if (defenseJudge.success) break
+    }
+
+    return results
+  }
+
+  //「全力防御」実行
+  defense(): ActionResult[] {
+    this.state.actor.defense.isFullDefenseTurn = true
+    return []
   }
 
   //「移動」実行

@@ -3,10 +3,11 @@
 import { type DefenseType, type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge } from '.'
 
-export const ACTION_KEYS = ['attack', 'move', 'wait'] as const
+export const ACTION_KEYS = ['attack', 'defense', 'move', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   attack: '攻撃',
+  defense: '全力防御',
   move: '移動',
   wait: '待機'
 } as const
@@ -29,6 +30,7 @@ export type ActionOptions = {
 // 行動キーとオプションの組み合わせ
 export type ActionRequest =
   | { key: 'attack', options: {}, targets: [Unit] }
+  | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }
   | { key: 'wait', options: {}, targets: [] }
 

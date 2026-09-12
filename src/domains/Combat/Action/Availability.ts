@@ -17,6 +17,12 @@ export class CombatActionAvailability {
     return this.state.actor.position !== 'back'
   }
 
+  //「全力防御」実行可否取得
+  // いつでも (暫定)
+  canDefense(): boolean {
+    return true
+  }
+
   //「移動」実行可否取得
   // 後退: 自身が後方に配置されていないこと
   // 前進: そこへ既に他の味方ユニットが配置されていないこと

@@ -20,6 +20,7 @@ export class CombatDefense {
   // 状態値
   public parryCount: number //「受け」試行回数
   public blockCount: number //「止め」試行回数
+  public isFullDefenseTurn: boolean //「全力防御」実行ターン
   public isFullDefense: boolean //「全力防御」可否
 
   constructor(self: Unit, model: UnitModel) {
@@ -36,7 +37,16 @@ export class CombatDefense {
     this.drName = model.equipments.getDRName()
     this.parryCount = 0
     this.blockCount = 0
+    this.isFullDefenseTurn = false
     this.isFullDefense = false
+  }
+
+  // 次のターンに進む際に, 「受け」「止め」試行回数と「全力防御」をリセットする
+  nextTurn() {
+    this.parryCount = 0
+    this.blockCount = 0
+    this.isFullDefense =  this.isFullDefenseTurn
+    this.isFullDefenseTurn = false
   }
 
   // 各種防御 (回避判定) の可否状況を取得

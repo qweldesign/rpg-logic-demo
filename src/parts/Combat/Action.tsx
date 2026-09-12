@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'confirmDefense' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'all'
 
@@ -63,6 +63,10 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); }} // ターゲットパレットへ進む
         >攻撃</button>
         <button
+          disabled={!store.availability.defense}
+          onClick={() => { setActionPalette('confirmDefense'); setActionKey('defense'); }} // 防御確認パレットへ進む
+        >全力防御</button>
+        <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionKey('move'); }} // 移動オプションパレットへ進む
         >移動</button>
@@ -91,6 +95,20 @@ function Action({ store }: { store: Store }) {
         >実行</button>
         <button
           onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
+      </div>
+
+      {/* 全力防御 */}
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmDefense'}>
+        <div className="confirm__grid">
+          <div>{store.actor.name}</div>
+          <div className="text-left">全力防御</div>
+        </div>
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
       </div>
 

@@ -36,7 +36,7 @@ export class CombatLog {
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
 
-      default: // case 'wait':
+      default: // case 'defense': case 'wait':
         return ACTION_LABELS[request.key]
     }
   }
@@ -101,6 +101,10 @@ export class CombatLog {
               break
           }
         })
+        break
+      }
+      case 'defense': {
+        messages.push(<>{`${actor} は 防御に専念!`}</>)
         break
       }
       case 'move': {
