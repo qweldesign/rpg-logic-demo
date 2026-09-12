@@ -90,6 +90,15 @@ export class CombatLog {
               else if (!result.judge.critical) messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
               else messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
               break
+
+            case 'knockedDown':
+              if (result.judge.success) messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
+              else messages.push(<>{`${target} は 転倒した!!`}</>)
+              break
+
+            case 'unconscious':
+              messages.push(<>{`${target} は 気絶した...`}</>)
+              break
           }
         })
         break

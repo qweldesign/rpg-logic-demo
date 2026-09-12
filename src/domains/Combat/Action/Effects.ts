@@ -2,7 +2,7 @@
 
 import { Combat as State } from '../'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type ActionResult, judgeAttack, judgeDefense, rollDmg } from '.'
+import { type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeKnockedDown } from '.'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -12,7 +12,7 @@ export class CombatActionEffects {
     this.state = state
   }
 
-  //「攻撃」実行 (暫定: 判定結果を返すのみ. ダメージ効果 (HP減少) の実装は未着手)
+  //「攻撃」実行 (判定結果に基づき, HPへのダメージ反映と朦朧・転倒・気絶までを処理する)
   attack(target: Unit): ActionResult[] {
     const results: ActionResult[] = []
     const actor = this.state.actor
@@ -33,9 +33,26 @@ export class CombatActionEffects {
     const dmgJudge = rollDmg(actor, target)
     results.push({ type: 'dmg', judge: dmgJudge })
 
-    //
-    // ダメージ効果の実装 (未着手)
-    //
+    if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
+
+    // ダメージ効果
+    target.health.injury += dmgJudge.roll
+
+    // 朦朧状態・転倒判定
+    // 朦朧状態への状態遷移は Health に委譲
+    if (target.health.stunned) {
+      const knockedDownJudge = judgeKnockedDown(target)
+      results.push({ type: 'knockedDown', judge: knockedDownJudge })
+      if (!knockedDownJudge.success) {
+        target.health.prone = true // 転倒
+      }
+    }
+
+    // 気絶
+    // 気絶への状態遷移は Health に委譲
+    if (target.health.unconscious) {
+      results.push({ type: 'unconscious' })
+    }
 
     return results
   }

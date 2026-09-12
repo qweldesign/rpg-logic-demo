@@ -1,7 +1,7 @@
 // src/domains/Combat/Action/resolver.ts
 
 import { type CombatUnit as Unit } from '../Unit'
-import { getRoll, judge, type AttackResult, type DefenseResult, type DmgResult } from '.'
+import { type Judge, getRoll, judge, type AttackResult, type DefenseResult, type DmgResult } from '.'
 
 // 攻撃の判定結果を返す
 export function judgeAttack(actor: Unit): AttackResult {
@@ -28,4 +28,9 @@ export function rollDmg(actor: Unit, target: Unit): DmgResult {
   const rate = actor.attack.getDmgRate()
   const roll = Math.floor(getRoll(count, mod) * rate)
   return { roll, success: roll > 0, critical: roll >= 10 }
+}
+
+// 転倒判定の結果を返す (成功: 朦朧状態, 失敗: 転倒)
+export function judgeKnockedDown(target: Unit): Judge {
+  return judge(target.pre)
 }

@@ -44,10 +44,12 @@ export class CombatUnit {
   public attack: Attack
   public defense: Defense
   public health: Health
+  public pre: number
+  public mre: number
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { name, maxHp } = model
+    const { name, maxHp, pre, mre } = model
     this.combatId = combatId
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
@@ -55,6 +57,8 @@ export class CombatUnit {
     this.attack = new Attack(model)
     this.defense = new Defense(this, model)
     this.health = new Health(this, maxHp)
+    this.pre = pre
+    this.mre = mre
     this.history = null
   }
 

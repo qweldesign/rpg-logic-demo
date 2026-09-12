@@ -6,9 +6,9 @@ import { type Judge, getRoll, judge } from './roll'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
-import { judgeAttack, judgeDefense, rollDmg } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeKnockedDown } from './resolver'
 
-export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult, judgeAttack, judgeDefense, rollDmg }
+export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult, judgeKnockedDown, judgeAttack, judgeDefense, rollDmg }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
