@@ -33,10 +33,15 @@ export class Combat {
 
   // 次のターンへ進む
   async nextTurn() {
-    this.turnIndex++
-    if (this.turnIndex > this.units.length) {
-      this.round++
-      this.turnIndex -= this.units.length
+    // 倒れているユニットのターンをパス
+    let isAlive = false
+    while (!isAlive) {
+      this.turnIndex++
+      if (this.turnIndex > this.units.length) {
+        this.round++
+        this.turnIndex -= this.units.length
+      }
+      isAlive = !this.actor.health.unconscious
     }
     this.formation = new Formation(this.actor, this.units)
     // 前ターンのログを, その行動者の履歴として保持 (Summaryの行動ラベル表示用)
