@@ -3,6 +3,7 @@
 import { type Point, type ParameterKey, type Parameter, Parameters } from './Parameters'
 import { WEAPON_KEYS, type WeaponKey, type Weapon, WEAPONS, type Dmg, SHIELD_KEYS, type ShieldKey, type Shield, SHIELDS, ARMOR_KEYS, type ArmorKey, type Armor, ARMORS, Equipments } from './Equipments'
 import { STORAGE_KEY } from '../SaveData'
+import { type CombatUnitModel as UnitModel } from '../Combat/Unit'
 
 export { type Point, type ParameterKey, type Parameter, Parameters, WEAPON_KEYS, type WeaponKey, type Weapon, WEAPONS, type Dmg, SHIELD_KEYS, type ShieldKey, type Shield, SHIELDS, ARMOR_KEYS, type ArmorKey, type Armor, ARMORS, Equipments }
 
@@ -174,6 +175,20 @@ export class Character {
       name: this.name,
       points: this.parameters.model,
       equipments: this.equipments.model
+    }
+  }
+
+  // 戦闘モデル用データ変換
+  get combatUnitModel(): UnitModel {
+    return {
+      name: this.name,
+      maxHp: this.maxHp,
+      level: this.combatSkill.level,
+      dmgMod: this.dmgMod,
+      ev: this.ev,
+      pre: this.getLevel('生命力'),
+      mre: this.getLevel('知力'),
+      equipments: this.equipments
     }
   }
 
