@@ -1,7 +1,7 @@
 // src/domains/Combat/Action/Effects.ts
 
 import { Combat as State } from '../'
-import { type Position } from '../Unit'
+import { type Position, type CombatUnit as Unit } from '../Unit'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -9,6 +9,11 @@ export class CombatActionEffects {
 
   constructor(state: State) {
     this.state = state
+  }
+
+  //「攻撃」実行 (暫定: コンソール出力のみ)
+  attack(target: Unit) {
+    console.log({ target })
   }
 
   //「移動」実行

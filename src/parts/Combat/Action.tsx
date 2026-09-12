@@ -1,21 +1,25 @@
 // src/parts/Combat/Action.tsx
 
 import { useState, useEffect } from 'react'
-import { type Position } from '../../domains/Combat/Unit'
+import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'move' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'move' | 'target' | 'hidden'
+
+type TargetPalette = 'attack' | 'all'
 
 function Action({ store }: { store: Store }) {
   // 状態管理
   const [actionPalette, setActionPalette] = useState<ActionPalette>('hidden')
+  const [targetPalette, setTargetPalette] = useState<TargetPalette>('all')
   const [actionKey, setActionKey] = useState<ActionKey>('wait')
   const [actionOptions, setActionOptions] = useState<ActionOptions>({})
+  const [actionTargets, setActionTargets] = useState<Unit[]>([])
   const [isExecuted, setIsExecuted] = useState<boolean>(false)
 
   // execute
   const execute = async () => {
-    const request = { key: actionKey, options: actionOptions } as ActionRequest
+    const request = { key: actionKey, options: actionOptions, targets: actionTargets } as ActionRequest
     await store.execute(request)
   }
 
@@ -24,6 +28,7 @@ function Action({ store }: { store: Store }) {
     setActionPalette('main')
     setActionKey('wait')
     setActionOptions({})
+    setActionTargets([])
     setIsExecuted(false)
   }
 
@@ -48,6 +53,10 @@ function Action({ store }: { store: Store }) {
       {/* メイン */}
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
+          disabled={!store.availability.attack}
+          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); }} // ターゲットパレットへ進む
+        >攻撃</button>
+        <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionKey('move'); }} // 移動オプションパレットへ進む
         >移動</button>
@@ -55,6 +64,16 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.wait}
           onClick={() => { setIsExecuted(true); }} // 実行
         >待機</button>
+      </div>
+
+      {/* 攻撃確認 */}
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
       </div>
 
       {/* 移動 */}
@@ -69,6 +88,23 @@ function Action({ store }: { store: Store }) {
         <button
           onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
+      </div>
+
+      {/* ターゲット */}
+      <div className="actions target" data-disable={actionPalette !== 'target'}>
+        {targetPalette === 'attack' && (
+          <>
+            {store.target.melee.map(target => (
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }} // ターゲットをセットし, 攻撃確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
+          </>
+        )}
       </div>
     </>
   )
