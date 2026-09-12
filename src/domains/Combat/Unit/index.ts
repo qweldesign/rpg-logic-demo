@@ -4,6 +4,7 @@ import { Equipments } from '../../Character'
 import { CombatAttack as Attack } from './Attack'
 import { type DefenseType, type DefenseTarget, CombatDefense as Defense } from './Defense'
 import { CombatHealth as Health } from './Health'
+import { type CombatLog as Log } from '../Log'
 
 export { type DefenseType, type DefenseTarget }
 
@@ -43,6 +44,7 @@ export class CombatUnit {
   public attack: Attack
   public defense: Defense
   public health: Health
+  public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
     const { name, maxHp } = model
@@ -53,5 +55,6 @@ export class CombatUnit {
     this.attack = new Attack(model)
     this.defense = new Defense(this, model)
     this.health = new Health(maxHp)
+    this.history = null
   }
 }
