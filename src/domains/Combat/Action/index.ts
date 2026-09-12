@@ -41,6 +41,7 @@ export class CombatAction {
   get availability() {
     return {
       attack: this.availabilityChecker.canAttack(),
+      defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
         return acc
@@ -72,6 +73,10 @@ export class CombatAction {
     switch (action.key) {
       case 'attack':
         results = this.effects.attack(action.target)
+        break
+
+      case 'defense':
+        this.effects.defense()
         break
 
       case 'move':
