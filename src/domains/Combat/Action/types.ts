@@ -3,12 +3,14 @@
 import { type DefenseType, type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge } from '.'
 
-export const ACTION_KEYS = ['attack', 'defense', 'move', 'wait'] as const
+export const ACTION_KEYS = ['attack', 'defense', 'move', 'recovery', 'standup', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   attack: '攻撃',
   defense: '全力防御',
   move: '移動',
+  recovery: '回復',
+  standup: '立ち上がり',
   wait: '待機'
 } as const
 
@@ -32,6 +34,8 @@ export type ActionRequest =
   | { key: 'attack', options: {}, targets: [Unit] }
   | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }
+  | { key: 'recovery', options: {}, targets: [] }
+  | { key: 'standup', options: {}, targets: [] }
   | { key: 'wait', options: {}, targets: [] }
 
 // 攻撃判定結果
@@ -50,5 +54,6 @@ export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
+  | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'unconscious' }

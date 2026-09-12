@@ -36,7 +36,7 @@ export class CombatLog {
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
 
-      default: // case 'defense': case 'wait':
+      default: // case 'defense': case 'recovery': case: 'standup': case 'wait':
         return ACTION_LABELS[request.key]
     }
   }
@@ -109,6 +109,19 @@ export class CombatLog {
       }
       case 'move': {
         messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
+        break
+      }
+      case 'recovery': {
+        results.forEach(result => {
+          if (result.type === 'recovery') {
+            if (result.judge.success) messages.push(<>{`${actor} は 朦朧状態から回復した!`}</>)
+            else messages.push(<>{`${actor} は 朦朧としていて何も行動できない...`}</>)
+          }
+        })
+        break
+      }
+      case 'standup': {
+        messages.push(<>{`${actor} は 転倒状態から立ち上がろうとしている`}</>)
         break
       }
       case 'wait': {

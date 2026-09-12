@@ -7,6 +7,7 @@ export class CombatHealth {
   public maxHp: number
   private _injury: number // 負傷 (HPの減少)
   public stunned: boolean // 朦朧状態
+  public standupTurn: boolean // 立ち上がったターン
   public prone: boolean // 転倒
   public unconscious: boolean // 気絶
 
@@ -15,8 +16,15 @@ export class CombatHealth {
     this.maxHp = maxHp
     this._injury = 0
     this.stunned = false
+    this.standupTurn = false
     this.prone = false
     this.unconscious = false
+  }
+
+  // 次のターンに進む際に, 「立ち上がり」を完了する
+  nextTurn() {
+    if (this.standupTurn) this.prone = false
+    this.standupTurn = false
   }
 
   // ダメージ効果 (判定不要の処理はここで解決する)

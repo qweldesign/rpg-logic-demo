@@ -50,8 +50,9 @@ export class Combat {
     this.action = new Action(this)
     //　コマンド入力待機
     await this.action.promise.then(() => {
-      // 行動者の能動防御 (受け・止めの試行回数, 全力防御) をリセット
+      // 各種状態を更新
       this.actor.defense.nextTurn()
+      this.actor.health.nextTurn()
       // 自身を呼び出し, また次のターンへ進む
       this.debug()
       this.nextTurn()

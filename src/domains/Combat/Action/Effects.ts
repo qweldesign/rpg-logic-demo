@@ -2,7 +2,7 @@
 
 import { Combat as State } from '../'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeKnockedDown } from '.'
+import { type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeRecovery, judgeKnockedDown } from '.'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -91,6 +91,20 @@ export class CombatActionEffects {
   //「移動」実行
   move(position: Position) {
     this.state.actor.position = position
+  }
+
+  // 朦朧状態からの「回復」実行 (自動実行)
+  recovery(): ActionResult[] {
+    const recoveryJudge = judgeRecovery(this.state.actor)
+    if (recoveryJudge.success) {
+      this.state.actor.health.stunned = false // 回復
+    }
+    return [{ type: 'recovery', judge: recoveryJudge }]
+  }
+
+  // 転倒状態からの「立ち上がり」実行 (自動実行)
+  standup() {
+    this.state.actor.health.standupTurn = true // 立ち上がり
   }
 
   //「待機」実行

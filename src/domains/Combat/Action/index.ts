@@ -6,9 +6,9 @@ import { type Judge, getRoll, judge } from './roll'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
-import { judgeAttack, judgeDefense, rollDmg, judgeKnockedDown } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeRecovery, judgeKnockedDown } from './resolver'
 
-export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult, judgeKnockedDown, judgeAttack, judgeDefense, rollDmg }
+export { type Judge, getRoll, judge, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, type ActionKey, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type ActionResult, judgeRecovery, judgeKnockedDown, judgeAttack, judgeDefense, rollDmg }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
@@ -31,6 +31,16 @@ export class CombatAction {
     this.promise = new Promise(resolve => {
       this.resolve = resolve
     })
+
+    // 朦朧状態の場合は「回復」を自動実行する
+    if (this.actor.health.stunned) {
+      this.execute({ key: 'recovery', options: {}, targets: [] })
+    }
+
+    // 転倒状態の場合は「立ち上がり」を自動実行する
+    if (!this.actor.health.stunned && this.actor.health.prone) {
+      this.execute({ key: 'standup', options: {}, targets: [] })
+    }
   }
 
   get actor() {
@@ -70,6 +80,7 @@ export class CombatAction {
 
     // 行動実行
     let results: ActionResult[] = []
+
     switch (action.key) {
       case 'attack':
         results = this.effects.attack(action.targets[0])
@@ -83,6 +94,14 @@ export class CombatAction {
         this.effects.move(action.options.position)
         break
 
+      case 'recovery':
+        results = this.effects.recovery()
+        break
+
+      case 'standup':
+        this.effects.standup()
+        break
+
       default: // case 'wait':
         this.effects.wait()
     }
@@ -91,8 +110,19 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
+    // 行動終了分岐
+    // 回復成功時・立ち上がりはターンを終えず, 同じ actor の行動を続ける
+    let nextTurn = true
+    const recoveryResult = results.find(result => result.type === 'recovery')
+    if ((action.key === 'recovery' && recoveryResult?.judge.success) || action.key === 'standup') {
+      this.unlocked = true
+      nextTurn = false
+    }
+
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    this.resolve()
+    if (nextTurn) {
+      this.resolve()
+    }
   }
 }
