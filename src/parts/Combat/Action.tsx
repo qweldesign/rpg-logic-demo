@@ -17,6 +17,9 @@ function Action({ store }: { store: Store }) {
   const [actionTarget, setActionTarget] = useState<Unit>(store.actor)
   const [isExecuted, setIsExecuted] = useState<boolean>(false)
 
+  // 防御タイプ
+  const defenseType = { parry: '受け', block: '止め', dodge: 'よけ' }
+
   // execute
   const execute = async () => {
     const request = { key: actionKey, options: actionOptions, target: actionTarget } as ActionRequest
@@ -68,6 +71,18 @@ function Action({ store }: { store: Store }) {
 
       {/* 攻撃確認 */}
       <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
+        {actionTarget && (
+          <div className="confirm__grid">
+            <div>{store.actor.name}</div>
+            <div>{actionTarget.name}</div>
+            <div>{store.actor.attack.name}: {store.actor.attack.dmgName}</div>
+            <div>{actionTarget.defense.name.armor}: {actionTarget.defense.drName}</div>
+            <div>攻撃目標値: {store.actor.attack.getTarget()}</div>
+            <div>防御目標値: {actionTarget.defense.getTarget().target} ({defenseType[actionTarget.defense.getTarget().type]})</div>
+            <div>効果: </div>
+            <div>ダメージ {store.actor.attack.getExpectedDmg(actionTarget.defense.dr, actionTarget.defense.isChain)} 点</div>
+          </div>
+        )}
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
