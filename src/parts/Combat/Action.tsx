@@ -32,6 +32,12 @@ function Action({ store }: { store: Store }) {
     setIsExecuted(false)
   }
 
+  // 防御タイプ
+  const defenseType = { parry: '受け', block: '止め', dodge: 'よけ' }
+
+  // 攻撃実行前確認パレット用の選択中ターゲット
+  const target = actionTargets[0]
+
   // ロック状態の切り替わりを検知し, パレットの表示状態を更新
   useEffect(() => {
     if (store.unlocked) {
@@ -68,6 +74,18 @@ function Action({ store }: { store: Store }) {
 
       {/* 攻撃確認 */}
       <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
+        {target && (
+          <div className="confirm__grid">
+            <div>{store.actor.name}</div>
+            <div>{target.name}</div>
+            <div>{store.actor.attack.name}: {store.actor.attack.dmgName}</div>
+            <div>{target.defense.name.armor}: {target.defense.drName}</div>
+            <div>攻撃目標値: {store.actor.attack.getTarget()}</div>
+            <div>防御目標値: {target.defense.getTarget().target} ({defenseType[target.defense.getTarget().type]})</div>
+            <div>効果: </div>
+            <div>ダメージ {store.actor.attack.getExpectedDmg()} 点</div>
+          </div>
+        )}
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
