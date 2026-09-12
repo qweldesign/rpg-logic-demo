@@ -4,7 +4,7 @@ import { type CombatUnit as Unit } from '../Unit'
 import { type Judge, getRoll, judge, score, type AttackResult, type DefenseResult, type DmgResult, type FeintResult } from '.'
 
 // 攻撃の判定結果を返す
-export function judgeAttack(actor: Unit): AttackResult {
+export function judgeAttack(actor: Unit): Omit<AttackResult, 'ready'> {
   const attackTarget = actor.attack.getTarget()
   return judge(attackTarget)
 }
@@ -13,10 +13,10 @@ export function judgeAttack(actor: Unit): AttackResult {
 // 可能な防御のうちで, 最も成功率の高い防御を自動選択する
 // 全力防御選択中は, 最初の防御に失敗しても, 残り試行回数の範囲で別の防御を続けて試みる
 // いずれかが成功すればそこで処理を終了する
-export function judgeDefense(actor: Unit, target: Unit): DefenseResult[] {
+export function judgeDefense(actor: Unit, target: Unit): Omit<DefenseResult, 'ready'>[] {
   const defense = target.defense
   const maxAttempts = defense.isFullDefense ? 2 : 1
-  const results: DefenseResult[] = []
+  const results = []
 
   if (defense.canBlock) {
     const blockResult = { ...judge(defense.getBlockTarget(actor)), type: 'block' as const }

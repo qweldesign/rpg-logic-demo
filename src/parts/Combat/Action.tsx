@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'all'
 
@@ -59,6 +59,10 @@ function Action({ store }: { store: Store }) {
       {/* メイン */}
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
+          disabled={!store.availability.ready}
+          onClick={() => { setActionPalette('confirmReady'); setActionKey('ready'); }} // 準備確認パレットへ進む
+        >準備</button>
+        <button
           disabled={!store.availability.attack}
           onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); }} // ターゲットパレットへ進む
         >攻撃</button>
@@ -78,6 +82,20 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.wait}
           onClick={() => { setIsExecuted(true); }} // 実行
         >待機</button>
+      </div>
+
+      {/* 準備確認 */}
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmReady'}>
+        <div className="confirm__grid">
+          <div>{store.actor.name}</div>
+          <div className="text-left">{store.actor.attack.name} を構える</div>
+        </div>
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
       </div>
 
       {/* 攻撃確認 */}

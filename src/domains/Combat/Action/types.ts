@@ -3,9 +3,10 @@
 import { type DefenseType, type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '.'
 
-export const ACTION_KEYS = ['attack', 'feint', 'defense', 'move', 'recovery', 'standup', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'defense', 'move', 'recovery', 'standup', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
+  ready: '準備',
   attack: '攻撃',
   feint: '牽制',
   defense: '全力防御',
@@ -32,6 +33,7 @@ export type ActionOptions = {
 
 // 行動キーとオプションの組み合わせ
 export type ActionRequest =
+  | { key: 'ready', options: {}, targets: [] }
   | { key: 'attack', options: {}, targets: [Unit] }
   | { key: 'feint', options: {}, targets: [Unit] }
   | { key: 'defense', options: {}, targets: [] }
@@ -41,11 +43,14 @@ export type ActionRequest =
   | { key: 'wait', options: {}, targets: [] }
 
 // 攻撃判定結果
-export type AttackResult = Judge
+export type AttackResult = Judge & {
+  ready: boolean // 攻撃後の武器の準備状態
+}
 
 // 防御判定結果
 export type DefenseResult = Judge & {
   type: DefenseType
+  ready: boolean // 防御後の武器の準備状態
 }
 
 // ダメージ判定結果

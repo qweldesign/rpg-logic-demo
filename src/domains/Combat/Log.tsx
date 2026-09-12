@@ -39,7 +39,7 @@ export class CombatLog {
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
 
-      default: // case 'defense': case 'recovery': case: 'standup': case 'wait':
+      default: // case 'ready': case 'defense': case 'recovery': case: 'standup': case 'wait':
         return ACTION_LABELS[request.key]
     }
   }
@@ -84,6 +84,10 @@ export class CombatLog {
     const key = request.key
     const messages = []
     switch (key) {
+      case 'ready': {
+        messages.push(<>{`${actor} は ${this.actor.attack.name} を構えた`}</>)
+        break
+      }
       case 'attack': {
         const target = request.targets[0].name
         results.forEach(result => {
@@ -91,6 +95,10 @@ export class CombatLog {
             case 'attack':
               messages.push(<>{`${actor} の ${this.actor.attack.name} による攻撃!`}</>)
               messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              if (!result.judge.success && !result.judge.ready) {
+                // 攻撃失敗時のみ非準備状態への変化をログに表示
+                messages.push(<>{`${actor} の ${this.actor.attack.name} は非準備状態になった`}</>)
+              }
               break
 
             case 'defense': {
@@ -98,6 +106,10 @@ export class CombatLog {
                 : result.judge.type === 'block' ? '盾による受け止め' : '回避'
               messages.push(<>{`${target} は ${defenseTypeLabel} を試みた!`}</>)
               messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              if (result.judge.success && !result.judge.ready) {
+                // 受け成功時のみ非準備状態への変化をログに表示
+                messages.push(<>{`${target} の ${request.targets[0].attack.name} は非準備状態になった`}</>)
+              }
               break
             }
 
