@@ -4,6 +4,8 @@ import { Equipments } from '../../Character'
 import { CombatAttack as Attack } from './Attack'
 import { type DefenseType, type DefenseTarget, CombatDefense as Defense } from './Defense'
 import { CombatHealth as Health } from './Health'
+import { CombatStatusBuff as StatusBuff } from './StatusBuff'
+import { CombatStatusDebuff as StatusDebuff } from './StatusDebuff'
 import { type CombatLog as Log } from '../Log'
 
 export { type DefenseType, type DefenseTarget }
@@ -29,7 +31,9 @@ export type CombatUnitModel = {
   maxHp: number
   level: number
   dmgMod: number
+  dmgBuff: number
   ev: number
+  evBuff: number
   pre: number
   mre: number
   equipments: Equipments
@@ -44,6 +48,8 @@ export class CombatUnit {
   public attack: Attack
   public defense: Defense
   public health: Health
+  public buff: StatusBuff
+  public debuff: StatusDebuff
   public pre: number
   public mre: number
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
@@ -57,6 +63,8 @@ export class CombatUnit {
     this.attack = new Attack(model)
     this.defense = new Defense(this, model)
     this.health = new Health(this, maxHp)
+    this.buff = new StatusBuff(model.dmgBuff, model.evBuff)
+    this.debuff = new StatusDebuff()
     this.pre = pre
     this.mre = mre
     this.history = null
@@ -64,6 +72,6 @@ export class CombatUnit {
 
   // Summary 表示用ラベル取得
   get label(): string {
-    return this.health.label
+    return this.health.label || this.debuff.label || this.buff.label
   }
 }

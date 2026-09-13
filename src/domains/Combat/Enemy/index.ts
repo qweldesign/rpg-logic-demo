@@ -9,7 +9,9 @@ export type EnemyParams = {
   maxHp: number // 最大Hp
   level: number // 技能値
   dmgMod: number // ダメージ修正
+  dmgBuff: number // StatusBuff の初期値
   ev: number // 回避値「よけ」
+  evBuff: number // StatusBuff の初期値
   pre: number // 身体的な抵抗値
   mre: number // 精神的な抵抗値
 }
@@ -40,7 +42,9 @@ export function makeCombatEnemyModel(name: string, params: EnemyParams, equips: 
     maxHp: params.maxHp,
     level: params.level,
     dmgMod: params.dmgMod,
+    dmgBuff: params.dmgBuff,
     ev: params.ev,
+    evBuff: params.evBuff,
     pre: params.pre,
     mre: params.mre,
     equipments: new Equipments(...equips)
@@ -58,7 +62,9 @@ export function makeParamsByRank(params: EnemyParams, rank: number): EnemyParams
     maxHp: params.maxHp + (rank + r1) * 2,
     level: params.level + (rank + r2),
     dmgMod: params.dmgMod + Math.floor((rank + r3) / 2),
+    dmgBuff: params.dmgBuff + (rank + r3) % 2,
     ev: params.ev + Math.floor((rank + r2) / 2),
+    evBuff: params.evBuff + (rank + r2) % 2,
     pre: params.pre + Math.floor((rank + r1) / 2),
     mre: params.mre + Math.floor(rank / 2)
   }

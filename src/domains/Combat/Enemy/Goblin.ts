@@ -7,7 +7,9 @@ const GOBLIN_PARAMS: EnemyParams = {
   maxHp: 8,
   level: 14,
   dmgMod: 0,
+  dmgBuff: 0,
   ev: 10,
+  evBuff: 0,
   pre: 10,
   mre: 10
 }
@@ -17,7 +19,9 @@ const HOBLIN_PARAMS: EnemyParams = {
   maxHp: 12, // 最大Hp +4
   level: 13, // 技能値 -1
   dmgMod: 1, // ダメージ修正 +1
+  dmgBuff: 0,
   ev: 10,
+  evBuff: 0,
   pre: 10,
   mre: 10
 }
