@@ -18,8 +18,11 @@ export class Combat {
   public logs: Log[]
   public playLog: () => Promise<void> // Combat 本体から受け取り, ActionStore から呼び出す
   public result: CombatResult // 勝敗結果
+  public usedRoster: boolean // 報酬有無
+  public rewardCp: number // 報酬Cp
+  public rewardGranted: boolean // 報酬付与の二重処理防止
 
-  constructor(models: UnitModel[], playLog: () => Promise<void>) {
+  constructor(models: UnitModel[], playLog: () => Promise<void>, usedRoster: boolean, rewardCp: number) {
     this.round = 1 // 1からカウント
     this.turnIndex = 0 // 開幕前は 0, 開幕と同時に 1 になる
     this.units = models.map((model, i) => {
@@ -30,6 +33,9 @@ export class Combat {
     this.logs = []
     this.playLog = playLog
     this.result = null
+    this.usedRoster = usedRoster
+    this.rewardCp = rewardCp
+    this.rewardGranted = false
   }
 
   get actor() {

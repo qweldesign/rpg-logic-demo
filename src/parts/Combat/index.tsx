@@ -1,6 +1,7 @@
 // src/parts/Combat/index.tsx
 
 import { type ReactNode, useRef, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Formation from './Formation'
 import Action from './Action'
 import Summary from './Summary'
@@ -26,6 +27,9 @@ function Combat() {
 
   // 勝敗結果
   const [result, setResult] = useState<State['result']>(null)
+
+  // navigate 取得
+  const navigate = useNavigate()
 
   // ログを積む関数
   const enqueueLog = (nodes: ReactNode[]): Promise<void> => {
@@ -56,10 +60,10 @@ function Combat() {
   // 敵味方ユニットモデルをセットし, State を初期化する関数
   const setup = () => {
     const saveData = new SaveData()
-    const players = playerSetup(saveData)
-    const seed = Math.ceil(players.seed + Math.random() * 15) % 16
-    const enemies = enemySetup(saveData, 'sample', seed)
-    return new State(players.models.concat(enemies.models), playLog)
+    const { models: players, seed, usedRoster } = playerSetup(saveData)
+    const battleSeed = Math.ceil(seed + Math.random() * 15) % 16
+    const { models: enemies, rewardCp } = enemySetup(saveData, 'sample', battleSeed)
+    return new State(players.concat(enemies), playLog, usedRoster, rewardCp)
   }
 
   // ログ再生
@@ -92,6 +96,16 @@ function Combat() {
 
     return () => clearTimeout(timer)
   }, [queue])
+  
+  // 報酬付与処理
+  useEffect(() => {
+    const state = stateRef.current
+    if (result === 'win' && state && state.usedRoster && state.rewardCp && !state.rewardGranted) {
+      state.rewardGranted = true
+      const saveData = new SaveData()
+      saveData.savePoints(saveData.loadPoints() + state.rewardCp)
+    }
+  }, [result])
 
   // 開幕
   useEffect(() => {
@@ -119,7 +133,15 @@ function Combat() {
             <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
               <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
                 {result ? (
-                  <p className="text-center font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
+                  <div className="text-center">
+                    <p className="font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
+                    {result === 'win' && stateRef.current.rewardCp && (
+                      <p className="mt-3 text-sm">CP +{stateRef.current.rewardCp}</p>
+                    )}
+                    {stateRef.current.usedRoster && (
+                      <button className="mt-6 w-48 h-12" onClick={() => navigate('/setup/')}>編成に戻る</button>
+                    )}
+                  </div>
                 ) : (
                   stateRef.current.action && (
                     <Action store={stateRef.current.action} />
