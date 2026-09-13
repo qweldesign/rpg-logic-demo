@@ -192,4 +192,15 @@ export class CombatLog {
       messages.push(<>{`出目は ${judge.roll}、牽制は失敗した...`}</>)
     }
   }
+  
+  // 勝利/敗北時ログ
+  receiveResult(result: 'win' | 'lose') {
+    const messages: ReactNode[] = []
+    if (result === 'win') {
+      messages.push(<span className="font-bold">{'敵陣営の前衛が崩れた!! 勝利!!'}</span>)
+    } else {
+      messages.push(<span className="font-bold">{'味方陣営の前衛が崩れた... 敗北...'}</span>)
+    }
+    this.messages.push(messages)
+  }
 }
