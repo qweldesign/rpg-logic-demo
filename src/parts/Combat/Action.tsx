@@ -82,10 +82,6 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionKey('move'); }} // 移動オプションパレットへ進む
         >移動</button>
-        <button
-          disabled={!store.availability.wait}
-          onClick={() => { setIsExecuted(true); }} // 実行
-        >待機</button>
       </div>
 
       {/* 準備確認 */}
