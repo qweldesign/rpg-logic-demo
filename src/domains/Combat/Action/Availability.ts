@@ -68,6 +68,6 @@ export class CombatActionAvailability {
 
   //「待機」実行可否取得
   canWait(): boolean {
-    return true
+    return false
   }
 }
