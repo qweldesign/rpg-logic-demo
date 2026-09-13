@@ -1,9 +1,12 @@
 // src/domains/Combat/index.ts
 
-import { type CombatUnitModel as UnitModel, CombatUnit as Unit } from './Unit'
+import { type Side, type CombatUnitModel as UnitModel, CombatUnit as Unit } from './Unit'
 import { CombatFormation as Formation } from './Formation'
 import { CombatAction as Action } from './Action'
 import { CombatLog as Log } from './Log'
+
+// 勝敗結果 (未決着は null)
+export type CombatResult = 'win' | 'lose' | null
 
 // 全ての情報を集約・管理するクラス
 export class Combat {
@@ -14,6 +17,7 @@ export class Combat {
   public action: Action | null
   public logs: Log[]
   public playLog: () => Promise<void> // Combat 本体から受け取り, ActionStore から呼び出す
+  public result: CombatResult // 勝敗結果
 
   constructor(models: UnitModel[], playLog: () => Promise<void>) {
     this.round = 1 // 1からカウント
@@ -25,6 +29,7 @@ export class Combat {
     this.action = null
     this.logs = []
     this.playLog = playLog
+    this.result = null
   }
 
   get actor() {
@@ -33,6 +38,16 @@ export class Combat {
 
   // 次のターンへ進む
   async nextTurn() {
+    // 勝敗判定
+    if (this.round > 1) {
+      const result = this.judgeResult()
+      if (result) {
+        this.result = result
+        this.logs[0]?.receiveResult(result)
+        await this.playLog()
+        return
+      }
+    }
     // 倒れているユニットのターンをパス
     let isAlive = false
     while (!isAlive) {
@@ -62,6 +77,18 @@ export class Combat {
       this.debug()
       this.nextTurn()
     })
+  }
+
+  // 勝敗判定
+  // 前衛に生存者 (気絶していない者) が1人もいない陣営があれば, その陣営の敗北とする
+  // 開幕直後 (round === 1, 全員が最初の1巡を終えるまで) は判定対象外
+  private judgeResult(): CombatResult {
+    const hasFrontAlive = (side: Side) => this.units.some(unit => (
+      unit.side === side && unit.position !== 'back' && !unit.health.unconscious
+    ))
+    if (!hasFrontAlive('player')) return 'lose'
+    if (!hasFrontAlive('enemy')) return 'win'
+    return null
   }
 
   debug() {

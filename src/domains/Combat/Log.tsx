@@ -183,4 +183,15 @@ export class CombatLog {
     return judge.success && judge.critical ? 'クリティカル!!'
       : judge.success && !judge.critical ? '成功!' : '失敗!'
   }
+
+  // 勝利/敗北時ログ
+  receiveResult(result: 'win' | 'lose') {
+    const messages: ReactNode[] = []
+    if (result === 'win') {
+      messages.push(<span className="font-bold">{'敵陣営の前衛が崩れた!! 勝利!!'}</span>)
+    } else {
+      messages.push(<span className="font-bold">{'味方陣営の前衛が崩れた... 敗北...'}</span>)
+    }
+    this.messages.push(messages)
+  }
 }
