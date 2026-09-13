@@ -24,6 +24,9 @@ function Combat() {
   const [queue, setQueue] = useState<QueueItem[]>([]) // 未表示 (待機中)
   const [messages, setMessages] = useState<ReactNode[]>([]) // 表示済み
 
+  // 勝敗結果
+  const [result, setResult] = useState<State['result']>(null)
+
   // ログを積む関数
   const enqueueLog = (nodes: ReactNode[]): Promise<void> => {
     return new Promise(resolve => {
@@ -44,6 +47,10 @@ function Combat() {
     const log = stateRef.current.logs[0]
     const messages = log.messages[log.messages.length - 1]
     await enqueueLog(messages)
+    // 勝敗結果を反映
+    if (stateRef.current.result) {
+      setResult(stateRef.current.result)
+    }
   }
 
   // 敵味方ユニットモデルをセットし, State を初期化する関数
@@ -111,9 +118,13 @@ function Combat() {
             </div>
             <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
               <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
-              {stateRef.current.action && (
-                <Action store={stateRef.current.action} />
-              )}
+                {result ? (
+                  <p className="text-center font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
+                ) : (
+                  stateRef.current.action && (
+                    <Action store={stateRef.current.action} />
+                  )
+                )}
             </div>
             <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
               <h3 className="m-0 border-0 font-serif text-sm">Log</h3>
