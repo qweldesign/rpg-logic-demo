@@ -185,7 +185,9 @@ export class Character {
       maxHp: this.maxHp,
       level: this.combatSkill.level,
       dmgMod: this.dmgMod,
+      dmgBuff: this.getLevel('怪力') % 2, //「怪力」端数 (StatusBuff の初期値)
       ev: this.ev,
+      evBuff: this.getLevel('運動') % 2, //「運動」端数 (StatusBuff の初期値)
       pre: this.getLevel('生命力'),
       mre: this.getLevel('知力'),
       equipments: this.equipments
