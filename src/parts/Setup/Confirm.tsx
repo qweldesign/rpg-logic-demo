@@ -16,6 +16,7 @@ function Confirm() {
   // セーブデータの読み込み
   const saveData = new SaveData()
   const keys = saveData.loadKeys()
+  const gold = saveData.loadGold(true)
 
   // SessionStorage から編集途中のデータを取得
   const model = saveData.loadModel(uid, true)
@@ -32,6 +33,7 @@ function Confirm() {
       const uid = unit.id.toString().padStart(2, '0')
       saveData.addKey(uid) // 新規の場合, インデックス登録
     }
+    saveData.saveGold(gold) // 所持金保存
     unit.save() // キャラクター保存
     sessionStorage.clear() // SessionStorage をクリア
     navigate(`/setup/`) // 戻る

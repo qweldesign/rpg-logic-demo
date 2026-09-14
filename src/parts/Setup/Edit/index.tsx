@@ -16,6 +16,7 @@ export type State = {
   params: Parameters // 現在のパラメータ
   prevEquips: Equipments // 元の装備
   equips: Equipments // 現在の装備
+  saleEquips: Equipments // 外して売却する装備 (売却装備)
   weaponList: [WeaponKey, Weapon][] // 装備可能な武器一覧
   shieldList: [ShieldKey, Shield][] // 装備可能な盾一覧
   armorList: [ArmorKey, Armor][] // 装備可能な服・鎧一覧
@@ -54,6 +55,7 @@ function Edit() {
     params: new Parameters(),
     prevEquips: new Equipments(),
     equips: new Equipments(),
+    saleEquips: new Equipments(),
     weaponList: Object.entries(WEAPONS) as [WeaponKey, Weapon][],
     shieldList: Object.entries(SHIELDS) as [ShieldKey, Shield][],
     armorList: Object.entries(ARMORS) as [ArmorKey, Armor][],
@@ -80,6 +82,20 @@ function Edit() {
       return { weaponList, shieldList, armorList }
     }
 
+    // 元と現在の装備を比較し, 異なる場合は元の装備を売却装備に指定する関数
+    const sale = (prevEquips: Equipments, equips: Equipments) => {
+      const equipSlots = ['weapon', 'shield', 'armor'] as const
+      let saleWeapon, saleShield, saleArmor
+      equipSlots.forEach(slot => {
+        if (prevEquips[slot].name !== equips[slot].name) {
+          if (slot === 'weapon') saleWeapon = prevEquips[slot].name as WeaponKey
+          if (slot === 'shield') saleShield = prevEquips[slot].name as ShieldKey
+          if (slot === 'armor') saleArmor = prevEquips[slot].name as ArmorKey
+        }
+      })
+      return new Equipments(saleWeapon, saleShield, saleArmor)
+    }
+
     switch (action.type) {
       case 'INIT': {
         // 名前, CP を取得
@@ -99,11 +115,14 @@ function Edit() {
         // 装備一覧を更新
         const { weaponList, shieldList, armorList } = updateEquipList(params.getLevel('筋力'), isSetTwoHanded)
 
+        // 元の装備を売却
+        const saleEquips = sale(prevEquips, equips)
+
         return {
           ...state,
           name, points, gold,
           prevParams, params,
-          prevEquips, equips,
+          prevEquips, equips, saleEquips,
           weaponList, shieldList, armorList
         }
       }
@@ -142,9 +161,12 @@ function Edit() {
         // 装備一覧を更新
         const { weaponList, shieldList, armorList } = updateEquipList(state.params.getLevel('筋力'), isSetTwoHanded)
 
+        // 元の装備を売却
+        const saleEquips = sale(state.prevEquips, nextEquips)
+
         return {
           ...state,
-          equips: nextEquips,
+          equips: nextEquips, saleEquips,
           weaponList, shieldList, armorList,
           isSetTwoHanded
         }
@@ -154,9 +176,12 @@ function Edit() {
         const [weapon, , armor] = state.equips.model
         const nextEquips = new Equipments(weapon, '装備無し', armor)
 
+        // 元の装備を売却
+        const saleEquips = sale(state.prevEquips, nextEquips)
+
         return {
           ...state,
-          equips: nextEquips
+          equips: nextEquips, saleEquips
         }
       }
 
@@ -180,9 +205,14 @@ function Edit() {
           resetedArmor = state.prevEquips.armor.name
         }
 
+        const nextEquips = new Equipments(resetedWeapon, resetedShield, resetedArmor)
+
+        // 元の装備を売却
+        const saleEquips = sale(state.prevEquips, nextEquips)
+
         return {
           ...state,
-          equips: new Equipments(resetedWeapon, resetedShield, resetedArmor),
+          equips: nextEquips, saleEquips
         }
       }
       
@@ -252,7 +282,7 @@ function Edit() {
   const calcGold = (state: State, isMax: boolean = false): number => {
     let gold = state.gold
     // 現在と元の装備の差分 (購入分 - 売却分) を算出
-    if (!isMax) gold -= state.equips.gold
+    if (!isMax) gold -= state.equips.gold - state.prevEquips.gold + Math.ceil(state.saleEquips.gold / 2)
     // 算出結果を返す
     return gold
   }
@@ -269,6 +299,17 @@ function Edit() {
       const message = (
         <p className="text-center">キャラクターポイントを使い切っていません。
           <br />ポイントを使い切ってください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
+    // 装備の購入金額が所持金を超えている場合のアラート
+    if (calcGold(state) < 0) {
+      const message = (
+        <p className="text-center">装備の購入金額が所持金を超えています。
+          <br />装備を変更してください。</p>
       )
       setAlertMessage(message)
       setAlertOpen(true)
@@ -297,6 +338,9 @@ function Edit() {
     // キャラクターデータの一時保存 (SessionStorage を使用)
     const unit = new Character(confirmModel)
     unit.save(true)
+
+    // 所持金の一時保存
+    saveData.saveGold(calcGold(state), true)
 
     // 確認画面へ進む
     if (!isNew) {
@@ -355,6 +399,19 @@ function Edit() {
       clearTransition()
     }
   }, [state.isSTChanged])
+
+  // 所持金・装備変更を監視
+  useEffect(() => {
+    if (calcGold(state) < 0) {
+      // 所持金が赤字になった場合のアラート
+      const message = (
+        <p className="text-center">装備の購入金額が所持金を超えています。
+          <br />装備を変更してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+    }
+  }, [state.equips])
 
   return (
     <div className="edit px-6">
