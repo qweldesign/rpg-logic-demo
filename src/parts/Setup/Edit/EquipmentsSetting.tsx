@@ -33,6 +33,9 @@ function EquipmentsSetting(
             <option key={i} value={key}>{key} | 性能:{weapon.dmgBase} ({weapon.dmgType === 2 ? '刺' : weapon.dmgType === 1 ? '切' : '叩'}) | {weapon.twoHanded ? '両手' : '片手'} | {weapon.gold}金</option>
           ))}
         </select>
+        <div className={state.saleEquips.weapon.name === '装備無し' ? 'hidden' : 'inline-block'}>
+          <span>{`${state.saleEquips.weapon.name} を売却 (${Math.floor(state.saleEquips.weapon.gold / 2)}金)`}</span>
+        </div>
       </div>
       <div>
         <label className="inline-block w-24 sm:text-right">盾: </label>
@@ -42,6 +45,9 @@ function EquipmentsSetting(
             <option key={i} value={key}>{key} | 性能:{shield.size * 2} | {shield.gold}金</option>
           ))}
         </select>
+        <div className={state.saleEquips.shield.name === '装備無し' ? 'hidden' : 'inline-block'}>
+          <span>{`${state.saleEquips.shield.name} を売却 (${Math.floor(state.saleEquips.shield.gold / 2)}金)`}</span>
+        </div>
       </div>
       <div>
         <label className="inline-block w-24 sm:text-right">服・鎧: </label>
@@ -50,6 +56,9 @@ function EquipmentsSetting(
             <option key={i} value={key}>{key} | 性能:{key !== '服' ? armor.dr : 0} | {armor.gold}金</option>
           ))}
         </select>
+        <div className={state.saleEquips.armor.name === '服' ? 'hidden' : 'inline-block'}>
+          <span>{`${state.saleEquips.armor.name} を売却 (${Math.floor(state.saleEquips.armor.gold / 2)}金)`}</span>
+        </div>
       </div>
     </section>
   )
