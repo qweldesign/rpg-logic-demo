@@ -1,6 +1,7 @@
 // src/domains/Combat/Unit/Defense.ts
 
 import { type CombatUnitModel as UnitModel, type CombatUnit as Unit } from '.'
+import { SPELL_ELEMENTS } from '../Spells'
 
 export type DefenseType = 'parry' | 'block' | 'dodge'
 
@@ -75,6 +76,7 @@ export class CombatDefense {
   get canBlock() {
     return (this.ev.shield > 0
       && this.blockCount < (this.isFullDefense ? 2 : 1)
+      && SPELL_ELEMENTS.every(element => this.self.spells.cast[element] === 0) // 精神集中中は不可
     )
   }
 
