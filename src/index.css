@@ -113,6 +113,10 @@
     @apply hover:text-[#999966] transition-colors duration-300;
   }
 
+  .table-wrapper {
+    @apply w-1/1 overflow-x-auto;
+  }
+
   table {
     @apply my-6 text-[0.875em];
 
