@@ -190,7 +190,12 @@ export class Character {
       evBuff: this.getLevel('運動') % 2, //「運動」端数 (StatusBuff の初期値)
       pre: this.getLevel('生命力'),
       mre: this.getLevel('知力'),
-      equipments: this.equipments
+      equipments: this.equipments,
+      elements: {
+        blue: this.get('青の魔法') > 0 ? this.getLevel('青の魔法') : 0,
+        red: this.get('赤の魔法') > 0 ? this.getLevel('赤の魔法') : 0,
+        green: this.get('緑の魔法') > 0 ? this.getLevel('緑の魔法') : 0
+      }
     }
   }
 

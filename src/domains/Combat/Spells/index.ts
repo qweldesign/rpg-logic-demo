@@ -103,3 +103,19 @@ export const SPELL_LIST: Record<SpellElement, Spell[]> = {
   red: RED_SPELL,
   green: GREEN_SPELL
 }
+
+export type Elements = Record<SpellElement, number>
+
+// ユニットの使用できる魔法, 精神集中を管理するクラス
+export class CombatSpells {
+  public level: Elements
+  public cast: Elements
+
+  constructor(spells: Elements) {
+    this.level = spells
+    this.cast = SPELL_ELEMENTS.reduce((acc, element) => {
+      acc[element] = 0
+      return acc
+    }, {} as Elements)
+  }
+}

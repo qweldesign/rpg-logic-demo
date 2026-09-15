@@ -47,7 +47,8 @@ export function makeCombatEnemyModel(name: string, params: EnemyParams, equips: 
     evBuff: params.evBuff,
     pre: params.pre,
     mre: params.mre,
-    equipments: new Equipments(...equips)
+    equipments: new Equipments(...equips),
+    elements: { blue: params.level, red: params.level, green: params.level }
   }
 }
 
