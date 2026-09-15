@@ -2,6 +2,9 @@
 
 import { SIDE_KEYS, POSITION_KEYS, type Side, type Position, CombatUnit as Unit } from '../Unit'
 
+export const DISTANCE_MOD_BACK = 4
+export const DISTANCE_MOD_FRONT = 2
+
 export const BACK_VALUES = { player: [1, 2, 3, 4], enemy: [5, 6, 7, 8] } as const
 export const FRONT_VALUES: Position[] = ['left', 'center', 'right'] as const
 
@@ -95,5 +98,13 @@ export class CombatFormation {
       default: // case 'back':
         return []
     }
+  }
+
+  // 距離による修正を取得
+  getDistanceMod(target: Unit): number {
+    if (this.actor.side === target.side) {
+      return 0
+    }
+    return target.position === 'back' ? DISTANCE_MOD_BACK : DISTANCE_MOD_FRONT
   }
 }
