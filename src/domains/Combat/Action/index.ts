@@ -2,6 +2,7 @@
 
 import { Combat as State } from '..'
 import { POSITION_KEYS } from '../Unit'
+import { CombatFormation as Formation } from '../Formation'
 import { type Judge, type Score, getRoll, judge, score } from './roll'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
@@ -15,6 +16,7 @@ export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABE
 export class CombatAction {
   private state: State
   public round: number
+  public formation: Formation
   public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
   public promise: Promise<void>
   public ready: Promise<void> // 開幕時の自動実行 (朦朧回復・立ち上がり) が完了したら解決
@@ -25,6 +27,7 @@ export class CombatAction {
   constructor(state: State) {
     this.state = state
     this.round = state.round
+    this.formation = state.formation!
     this.unlocked = true // コマンドパレットをアンロック
     this.availabilityChecker = new Availability(state)
     this.effects = new Effects(state)
@@ -110,7 +113,7 @@ export class CombatAction {
         break
 
       case 'spell':
-        results = this.effects.spell(action.options.element, action.options.spellId)
+        results = this.effects.spell(action.options.element, action.options.spellId, action.target)
         break
 
       case 'defense':

@@ -1,6 +1,8 @@
 // src/domains/Combat/Spells/index.ts
 
 import { type ParameterKey } from '../../Character'
+import { type CombatUnit as Unit } from '../Unit'
+import { DISTANCE_MOD_BACK, CombatFormation as Formation } from '../Formation'
 
 export const SPELL_ELEMENTS = ['blue', 'red', 'green'] as const
 
@@ -117,5 +119,23 @@ export class CombatSpells {
       acc[element] = 0
       return acc
     }, {} as Elements)
+  }
+
+  getSpellTarget(element: SpellElement, spellId: number, formation: Formation, target: Unit): number {
+    const base = this.level[element]
+    const mod = this.getDistanceMod(element, spellId, formation, target)
+    return base - mod
+  }
+
+  getDistanceMod(element: SpellElement, spellId: number, formation: Formation, target: Unit): number {
+    const spell = SPELL_LIST[element].find(spell => spell.id === spellId)!
+    const kind = spell.effects && spell.effects.length ? spell.effects[0].kind : 'defense'
+    if (kind === 'debuff' || kind === 'trip' || kind === 'dmg') {
+      return formation.getDistanceMod(target)
+    } else if (kind === 'dmgAll' || kind === 'flash') {
+      return DISTANCE_MOD_BACK
+    } else {
+      return 0
+    }
   }
 }

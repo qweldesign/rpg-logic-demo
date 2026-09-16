@@ -187,6 +187,7 @@ function Action({ store }: { store: Store }) {
           <div className="confirm__grid">
             <div>{store.actor.name}</div>
             <div className="text-left">{SPELL_ELEMENT_LABELS[actionOptions.element]}: {SPELL_LIST[actionOptions.element][actionOptions.spellId].label}</div>
+            <div>発動目標値: {store.actor.spells.getSpellTarget(actionOptions.element, actionOptions.spellId, store.formation, actionTarget)}</div>
           </div>
         )}
         <button
