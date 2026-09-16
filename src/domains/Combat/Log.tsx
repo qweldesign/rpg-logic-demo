@@ -195,8 +195,8 @@ export class CombatLog {
         messages.push(<>{`${actor} は 転倒状態から立ち上がろうとしている`}</>)
         break
       }
-      default: { // case 'wait':
-        messages.push(<>{`${actor} は 待機している`}</>)
+      default: { // case 'wait': (恐慌状態のみ)
+        messages.push(<>{`${actor} は 恐慌状態で立ち尽くしている...`}</>)
         break
       }
     }
