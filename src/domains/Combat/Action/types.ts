@@ -95,6 +95,12 @@ export type SpellResult = Judge & {
   effectResults: SpellEffectResult[]
 }
 
+// kind: debuffAll
+export type DebuffAllResult = Score & {
+  target: Unit
+  statusTarget: SpellDebuffTarget
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -102,6 +108,7 @@ export type ActionResult =
   | { type: 'dmg', judge: DmgResult }
   | { type: 'feint', judge: FeintResult }
   | { type: 'spell', judge: SpellResult }
+  | { type: 'debuffAll', judge: DebuffAllResult }
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }

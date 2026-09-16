@@ -160,13 +160,28 @@ export class CombatActionEffects {
     SPELL_ELEMENTS.forEach(spellElement => { actor.spells.cast[spellElement] = 0 })
     const spellJudge = judgeSpell(actor, element, spellId, this.formation, target)
     const effectResults: SpellEffectResult[] = []
+    const extraResults: ActionResult[] = []
+
     if (spellJudge.success) {
       SPELL_LIST[element][spellId].effects?.forEach(effect => {
-        const effectResult = this.applySpellEffect(target, effect)
+        // 効果種別 (effect.kind) ごとに処理
+        let effectResult = {}
+
+        if (effect.kind === 'buff' || effect.kind === 'debuff') {
+          // バフ・デバフ
+          effectResult = this.applySpellEffect(target, effect)
+        } else if (effect.kind === 'debuffAll') {
+          // 全体デバフ
+          const allies = this.formation.getAllies().filter(unit => unit !== actor)
+          const enemies = this.formation.getEnemies()
+          const targets = [...allies, ...enemies]
+          targets.forEach(target => extraResults.push(...this.spellDebuffAllRoutine(target, actor, effect)))
+        }
+      
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
       })
     }
-    return [{ type: 'spell', judge: { ...spellJudge, effectResults } }]
+    return [{ type: 'spell', judge: { ...spellJudge, effectResults } }, ...extraResults]
   }
 
   // 魔法の効果適用
@@ -189,6 +204,20 @@ export class CombatActionEffects {
       return { kind: 'debuff', target: effect.target, applied }
     }
     return {}
+  }
+
+  // kind: debuffAll
+  private spellDebuffAllRoutine(target: Unit, actor: Unit, effect: Extract<SpellEffect, { kind: 'debuffAll' }>): ActionResult[] {
+    const isAlly = target.side === actor.side
+    const mod = isAlly ? effect.allyResistMod : effect.enemyResistMod
+    const resistJudge = judgeResist(target, mod)
+    if (resistJudge.success) return [] // 抵抗に成功したログは出力しない
+
+    const duration = effect.duration === 'margin' ? -resistJudge.score : effect.duration
+    target.debuff[effect.target] = duration
+
+    const debuffResult = { ...resistJudge, target, statusTarget: effect.target }
+    return [{ type: 'debuffAll', judge: debuffResult }]
   }
 
   //「全力防御」実行

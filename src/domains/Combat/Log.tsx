@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
-import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type SpellResult, type ActionResult } from './Action'
+import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type SpellResult, type DebuffAllResult, type ActionResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, SPELL_DEBUFF_LABELS } from './Spells'
 
 let count = 0
@@ -90,7 +90,7 @@ export class CombatLog {
   // 結果ログ生成
   private createMessages(request: ActionRequest, results: ActionResult[]): ReactNode[] {
     const actor = this.actor.name
-    const messages = []
+    const messages: ReactNode[] = []
     switch (request.key) {
       case 'ready': {
         messages.push(<>{`${actor} は ${this.actor.attack.name} を構えた`}</>)
@@ -172,6 +172,13 @@ export class CombatLog {
             messages.push(<>{`${target.name} は抵抗した!`}</>)
           }
         })
+        results.forEach(result => {
+          switch (result.type) {
+            case 'debuffAll':
+              this.pushDebuffAllMessage(messages, result.judge)
+              break
+          }
+        })
         break
       }
       case 'defense': {
@@ -211,6 +218,12 @@ export class CombatLog {
   private getResultLabel(judge: Judge): string {
     return judge.success && judge.critical ? 'クリティカル!!'
       : judge.success && !judge.critical ? '成功!' : '失敗!'
+  }
+
+  // kind: debuffAll
+  private pushDebuffAllMessage(messages: ReactNode[], judge: DebuffAllResult) {
+    const targetName = judge.target.name
+    messages.push(<>{`${targetName} は ${SPELL_DEBUFF_LABELS[judge.statusTarget]} 状態になった!`}</>)
   }
   
   // 勝利/敗北時ログ
