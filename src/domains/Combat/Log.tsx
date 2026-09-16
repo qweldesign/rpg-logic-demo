@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
 import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type FeintResult, type SpellResult, type ActionResult } from './Action'
-import { SPELL_ELEMENT_LABELS } from './Spells'
+import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, SPELL_DEBUFF_LABELS } from './Spells'
 
 let count = 0
 
@@ -42,7 +42,8 @@ export class CombatLog {
         return `${ACTION_LABELS[request.key]}:${SPELL_ELEMENT_LABELS[request.options.element].slice(0, 1)}(${this.actor.spells.cast[request.options.element]})`
 
       case 'spell':
-        return (results[0].judge as SpellResult).spell
+        const spellJudge = results[0].judge as SpellResult
+        return spellJudge.success ? spellJudge.spell : `${spellJudge.spell}(不発)`
 
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
@@ -157,8 +158,25 @@ export class CombatLog {
         messages.push(<>{`${actor} は ${SPELL_ELEMENT_LABELS[request.options.element]} の呪文に集中している`}</>)
         break
       }
+      
+
       case 'spell': {
-        messages.push(<>{`${actor} の ${(results[0].judge as SpellResult).spell} 発動!!`}</>)
+        const spellJudge = (results[0].judge as SpellResult)
+        const target = request.target
+        if (!spellJudge.success) {
+          messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
+          break
+        }
+        messages.push(<>{`${actor} の ${spellJudge.spell} 発動!!`}</>)
+        spellJudge.effectResults.forEach(result => {
+          if (result.kind === 'buff') {
+            messages.push(<>{`${target.name} の ${SPELL_BUFF_LABELS[result.target]} が上昇した!`}</>)
+          } else if (result.kind === 'debuff' && result.applied) {
+            messages.push(<>{`${target.name} は ${SPELL_DEBUFF_LABELS[result.target]} 状態になった!`}</>)
+          } else if (result.kind === 'debuff') {
+            messages.push(<>{`${target.name} は抵抗した!`}</>)
+          }
+        })
         break
       }
       case 'defense': {
