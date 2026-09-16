@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type SpellEffectResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -72,33 +72,7 @@ export class CombatActionEffects {
 
     // ダメージ判定
     const dmgJudge = rollDmg(actor, target, fullPower, attackJudge.critical)
-    results.push({ type: 'dmg', judge: dmgJudge })
-
-    if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
-
-    // ダメージ効果
-    target.health.injury += dmgJudge.roll
-
-    // 気絶・致死判定
-    // 気絶への状態遷移は Health に委譲
-    if (target.health.unconscious) {
-      const fatalJudge = judgeEndurance(target)
-      results.push({ type: 'fatal', judge: fatalJudge })
-      if (!fatalJudge.success) {
-        target.health.dead = true // 死亡
-      }
-      return results // 以降のログ出力を止める
-    }
-
-    // 朦朧状態・転倒判定
-    // 朦朧状態への状態遷移は Health に委譲
-    if (target.health.stunned) {
-      const knockedDownJudge = judgeEndurance(target)
-      results.push({ type: 'knockedDown', judge: knockedDownJudge })
-      if (!knockedDownJudge.success) {
-        target.health.prone = true // 転倒
-      }
-    }
+    results.push(...this.resolveDmg(dmgJudge, target))
 
     return results
   }
@@ -126,6 +100,41 @@ export class CombatActionEffects {
 
       // 防御に成功したら処理を抜ける
       if (defenseJudge.success) break
+    }
+
+    return results
+  }
+
+  // ダメージ効果
+  private resolveDmg(dmgJudge: DmgResult, target: Unit): ActionResult[] {
+    const results: ActionResult[] = []
+
+    results.push({ type: 'dmg', judge: dmgJudge })
+
+    if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
+
+    // ダメージ効果
+    target.health.injury += dmgJudge.roll
+
+    // 気絶・致死判定
+    // 気絶への状態遷移は Health に委譲
+    if (target.health.unconscious) {
+      const fatalJudge = judgeEndurance(target)
+      results.push({ type: 'fatal', judge: fatalJudge })
+      if (!fatalJudge.success) {
+        target.health.dead = true // 死亡
+      }
+      return results // 以降のログ出力を止める
+    }
+
+    // 朦朧状態・転倒判定
+    // 朦朧状態への状態遷移は Health に委譲
+    if (target.health.stunned) {
+      const knockedDownJudge = judgeEndurance(target)
+      results.push({ type: 'knockedDown', judge: knockedDownJudge })
+      if (!knockedDownJudge.success) {
+        target.health.prone = true // 転倒
+      }
     }
 
     return results
@@ -242,6 +251,26 @@ export class CombatActionEffects {
     target.health.prone = true // 転倒
 
     return { results, applied: true }
+  }
+
+  // kind: dmg, dmgAll
+  spellDmgRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'dmg' }>): ActionResult[] {
+    const results: ActionResult[] = []
+
+    const canDefend = target.defense.canDefend
+    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
+
+    for (const defenseResult of defenseResults) {
+      results.push(defenseResult)
+      if (defenseResult.type === 'defense' && defenseResult.judge.success) {
+        return results // 防御に成功した場合はここで処理を止める
+      }
+    }
+
+    const dmgJudge = rollSpellDmg(this.state.actor, effect.dice, effect.dmgType, target)
+    results.push(...this.resolveDmg(dmgJudge, target)) // ダメージ適用
+
+    return results
   }
 
   //「全力防御」実行
