@@ -190,6 +190,13 @@ export class CombatActionEffects {
           const { results: defenseResults, applied } = this.spellTripRoutine(target)
           extraResults.push(...defenseResults)
           extraResults.push({ type: 'trip', judge: { roll: 0, success: applied, critical: false } })
+        } else if (effect.kind === 'dmg') {
+          // 直接ダメージ
+          extraResults.push(...this.spellDmgRoutine(target, effect))
+        } else if (effect.kind === 'dmgAll') {
+          // 全体ダメージ
+          const targets = this.formation.getEnemies()
+          targets.forEach(target => extraResults.push(...this.spellDmgRoutine(target, effect)))
         }
       
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
@@ -254,7 +261,7 @@ export class CombatActionEffects {
   }
 
   // kind: dmg, dmgAll
-  spellDmgRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'dmg' }>): ActionResult[] {
+  spellDmgRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'dmg' }> | Extract<SpellEffect, { kind: 'dmgAll' }>): ActionResult[] {
     const results: ActionResult[] = []
 
     const canDefend = target.defense.canDefend

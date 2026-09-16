@@ -154,7 +154,7 @@ export class CombatLog {
             case 'debuffAll':
               this.pushDebuffAllMessage(messages, result.judge)
               break
-            default: // case 'trip':
+            default: // case 'defense': case 'dmg': case 'trip': case 'knockedDown': case 'fatal':
               this.pushDmgResolutionMessage(messages, target, result)
           }
         })
