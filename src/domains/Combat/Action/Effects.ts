@@ -192,6 +192,9 @@ export class CombatActionEffects {
           extraResults.push({ type: 'trip', judge: { roll: 0, success: applied, critical: false } })
         } else if (effect.kind === 'dmg') {
           // 直接ダメージ
+          target = effect.randomTarget // ランダムターゲット
+            ? this.formation.getEnemies()[Math.floor(Math.random() * this.formation.getEnemies().length)]
+            : target
           extraResults.push(...this.spellDmgRoutine(target, effect))
         } else if (effect.kind === 'dmgAll') {
           // 全体ダメージ
