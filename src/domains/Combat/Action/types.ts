@@ -109,6 +109,7 @@ export type ActionResult =
   | { type: 'feint', judge: FeintResult }
   | { type: 'spell', judge: SpellResult }
   | { type: 'debuffAll', judge: DebuffAllResult }
+  | { type: 'trip', judge: Judge }
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }

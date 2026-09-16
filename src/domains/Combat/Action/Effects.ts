@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type SpellEffectResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type FullPower, type DefenseResult, type SpellEffectResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -176,6 +176,11 @@ export class CombatActionEffects {
           const enemies = this.formation.getEnemies()
           const targets = [...allies, ...enemies]
           targets.forEach(target => extraResults.push(...this.spellDebuffAllRoutine(target, actor, effect)))
+        } else if (effect.kind === 'trip') {
+          // 転倒
+          const { results: defenseResults, applied } = this.spellTripRoutine(target)
+          extraResults.push(...defenseResults)
+          extraResults.push({ type: 'trip', judge: { roll: 0, success: applied, critical: false } })
         }
       
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
@@ -218,6 +223,25 @@ export class CombatActionEffects {
 
     const debuffResult = { ...resistJudge, target, statusTarget: effect.target }
     return [{ type: 'debuffAll', judge: debuffResult }]
+  }
+
+  // kind: trip
+  private spellTripRoutine(target: Unit): { results: ActionResult[], applied: boolean} {
+    const results: ActionResult[] = []
+
+    const canDefend = target.defense.canDefend
+    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
+
+    for (const defenseResult of defenseResults) {
+      results.push(defenseResult)
+      if (defenseResult.type === 'defense' && defenseResult.judge.success) {
+        return { results, applied: false } // 防御に成功した場合はここで処理を止める
+      }
+    }
+
+    target.health.prone = true // 転倒
+
+    return { results, applied: true }
   }
 
   //「全力防御」実行
