@@ -95,8 +95,8 @@ export class CombatActionEffects {
         target.defense.blockCount++
       }
 
-      // 判定結果をpush
-      results.push({ type: 'defense', judge: { ...defenseJudge, ready: target.attack.ready } })
+      // 判定結果をpush (ログ表示用に target も含めること)
+      results.push({ type: 'defense', judge: { ...defenseJudge, ready: target.attack.ready, target } })
 
       // 防御に成功したら処理を抜ける
       if (defenseJudge.success) break
@@ -109,7 +109,8 @@ export class CombatActionEffects {
   private resolveDmg(dmgJudge: DmgResult, target: Unit): ActionResult[] {
     const results: ActionResult[] = []
 
-    results.push({ type: 'dmg', judge: dmgJudge })
+    // 判定結果をpush (ログ表示用に target も含めること)
+    results.push({ type: 'dmg', judge: { ...dmgJudge, target } })
 
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 

@@ -134,7 +134,7 @@ export class CombatLog {
 
       case 'spell': {
         const spellJudge = (results[0].judge as SpellResult)
-        const target = request.target
+        let target = request.target
         if (!spellJudge.success) {
           messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
           break
@@ -151,10 +151,15 @@ export class CombatLog {
         })
         results.forEach(result => {
           switch (result.type) {
+            case 'defense': case 'dmg':
+              // default: での処理においてもこの target を引き継いで使用する
+              target = result.judge.target ?? target
+              this.pushDmgResolutionMessage(messages, target, result)
+              break
             case 'debuffAll':
               this.pushDebuffAllMessage(messages, result.judge)
               break
-            default: // case 'defense': case 'dmg': case 'trip': case 'knockedDown': case 'fatal':
+            default: // case 'trip': case 'knockedDown': case 'fatal':
               this.pushDmgResolutionMessage(messages, target, result)
           }
         })

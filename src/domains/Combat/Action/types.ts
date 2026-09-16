@@ -74,10 +74,13 @@ export type AttackResult = Judge & {
 export type DefenseResult = Judge & {
   type: DefenseType
   ready: boolean // 防御後の武器の準備状態
+  target?: Unit // 範囲魔法など対象を特定できない場合のログ表示用 (ログ上では以降もこの属性を引き継ぐ)
 }
 
 // ダメージ判定結果
-export type DmgResult = Judge
+export type DmgResult = Judge & {
+  target?: Unit // 範囲魔法など対象を特定できない場合のログ表示用 (ログ上では以降もこの属性を引き継ぐ)
+}
 
 // 牽制の判定結果
 export type FeintResult = Score & {
