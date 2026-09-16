@@ -1,7 +1,8 @@
 // src/domains/Combat/Action/resolver.ts
 
 import { type CombatUnit as Unit } from '../Unit'
-import { type Judge, getRoll, judge, score, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult } from '.'
+import { type Judge, getRoll, judge, score, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from '.'
+import { SPELL_LIST, type SpellElement } from '../Spells'
 
 // 攻撃の判定結果を返す
 export function judgeAttack(actor: Unit, fullPower: FullPower): Omit<AttackResult, 'ready'> {
@@ -49,6 +50,12 @@ export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower, isCriti
 // 牽制の判定結果を返す (成功度がそのまま target の次の防御目標値へのペナルティになる)
 export function judgeFeint(actor: Unit, target: Unit): FeintResult {
   return { target, ...score(actor.attack.target) }
+}
+
+// 魔法の判定結果を返す
+export function judgeSpell(actor: Unit, element: SpellElement, spellId: number): Omit<SpellResult, 'effectResults'> {
+  const spell = SPELL_LIST[element][spellId].label
+  return { spell, ...judge(actor.spells.level[element]) }
 }
 
 // 生命力判定の結果を返す (転倒判定・回復判定・致死判定)

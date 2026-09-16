@@ -265,6 +265,10 @@
     @apply w-48;
   }
 
+  .actions > button.is-pending {
+    @apply opacity-50 pointer-events-none cursor-default hover:bg-black/50 hover:text-white;
+  }
+
   .timeline {
     @apply transition-none duration-300;
   }

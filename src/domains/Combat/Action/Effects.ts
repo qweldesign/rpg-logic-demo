@@ -2,7 +2,8 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance } from '.'
+import { type FullPower, type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance } from '.'
+import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -139,6 +140,22 @@ export class CombatActionEffects {
       actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score }
     }
     return [{ type: 'feint', judge: feintJudge }]
+  }
+
+  //「集中」実行
+  cast(element: SpellElement) {
+    const actor = this.state.actor
+    actor.spells.cast[element] = Math.min(actor.spells.cast[element] + 1, 3)
+    SPELL_ELEMENTS.forEach(spellElement => {
+      if (spellElement !== element) actor.spells.cast[spellElement] = 0
+    })
+  }
+
+  //「魔法」実行
+  spell(element: SpellElement, spellId: number): ActionResult[] {
+    const actor = this.state.actor
+    SPELL_ELEMENTS.forEach(spellElement => { actor.spells.cast[spellElement] = 0 })
+    return [{ type: 'spell', judge: { ...judgeSpell(actor, element, spellId), effectResults: [] } }]
   }
 
   //「全力防御」実行
