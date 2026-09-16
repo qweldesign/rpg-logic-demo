@@ -109,23 +109,6 @@ export class CombatLog {
               }
               break
 
-            case 'defense':
-              const defenseTypeLabel = result.judge.type === 'parry' ? '武器による受け流し'
-                : result.judge.type === 'block' ? '盾による受け止め' : '回避'
-              messages.push(<>{`${target.name} は ${defenseTypeLabel} を試みた!`}</>)
-              messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
-              if (result.judge.success && !result.judge.ready) {
-                // 受け成功時のみ非準備状態への変化をログに表示
-                messages.push(<>{`${target.name} の ${request.target.attack.name} は非準備状態になった`}</>)
-              }
-              break
-
-            case 'dmg':
-              if (result.judge.roll < 1) messages.push(<>{`ダメージは ${target.name} の鎧によって完全に止められた...`}</>)
-              else if (!result.judge.critical) messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
-              else messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
-              break
-
             case 'feint':
               messages.push(<>{`${actor} は ${target.name} に対して牽制を仕掛けた!`}</>)
               if (result.judge.success) {
@@ -136,14 +119,8 @@ export class CombatLog {
               }
               break
 
-            case 'knockedDown':
-              if (result.judge.success) messages.push(<>{`${target.name} は 朦朧状態に陥った!`}</>)
-              else messages.push(<>{`${target.name} は 転倒した!!`}</>)
-              break
-
-            case 'fatal':
-              if (result.judge.success) messages.push(<>{`${target.name} は 気絶した...`}</>)
-              else messages.push(<>{`${target.name} は 死亡した...`}</>)
+            default: // case 'defense': case 'dmg': case 'knockedDown': case 'fatal':
+              this.pushDmgResolutionMessage(messages, request.target, result)
               break
           }
         })
@@ -218,6 +195,38 @@ export class CombatLog {
   private getResultLabel(judge: Judge): string {
     return judge.success && judge.critical ? 'クリティカル!!'
       : judge.success && !judge.critical ? '成功!' : '失敗!'
+  }
+
+  // 攻撃・射撃に共通する, 防御判定以降の結果ログを追加
+  private pushDmgResolutionMessage(messages: ReactNode[], target: Unit, result: ActionResult) {
+    switch (result.type) {
+      case 'defense':
+        const defenseTypeLabel = result.judge.type === 'parry' ? '武器による受け流し'
+          : result.judge.type === 'block' ? '盾による受け止め' : '回避'
+        messages.push(<>{`${target.name} は ${defenseTypeLabel} を試みた!`}</>)
+        messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+        if (result.judge.success && !result.judge.ready) {
+          // 受け成功時のみ非準備状態への変化をログに表示
+          messages.push(<>{`${target.name} の ${target.attack.name} は非準備状態になった`}</>)
+        }
+        break
+
+      case 'dmg':
+        if (result.judge.roll < 1) messages.push(<>{`ダメージは ${target.name} の鎧によって完全に止められた...`}</>)
+        else if (!result.judge.critical) messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
+        else messages.push(<>{`${target.name} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
+        break
+
+      case 'knockedDown':
+        if (result.judge.success) messages.push(<>{`${target.name} は 朦朧状態に陥った!`}</>)
+        else messages.push(<>{`${target.name} は 転倒した!!`}</>)
+        break
+
+      case 'fatal':
+        if (result.judge.success) messages.push(<>{`${target.name} は 気絶した...`}</>)
+        else messages.push(<>{`${target.name} は 死亡した...`}</>)
+        break
+    }
   }
 
   // kind: debuffAll
