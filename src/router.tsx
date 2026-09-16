@@ -24,6 +24,6 @@ export const router = createBrowserRouter(
     ]
   }],
   {
-    basename: '/demo/01/',
+    basename: '/demo/02/',
   }
 )
