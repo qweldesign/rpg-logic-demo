@@ -76,24 +76,30 @@ export class CombatFormation {
   // 近接攻撃対象取得
   getMeleeTargets(): Unit[] {
     const enemies = this.getEnemies()
-    switch (this.actor.position) {
-      case 'left':
-        return enemies.filter(unit => {
-          return (unit.position === 'center' || unit.position === 'right') && !unit.health.unconscious
-        })
+    const reachable = (() => {
+      switch (this.actor.position) {
+        case 'left':
+          return enemies.filter(unit => {
+            return (unit.position === 'center' || unit.position === 'right') && !unit.health.unconscious
+          })
 
-      case 'center':
-        return enemies.filter(unit => {
-          return unit.position !== 'back' && !unit.health.unconscious
-        })
+        case 'center':
+          return enemies.filter(unit => {
+            return unit.position !== 'back' && !unit.health.unconscious
+          })
 
-      case 'right':
-        return enemies.filter(unit => {
-          return (unit.position === 'left' || unit.position === 'center') && !unit.health.unconscious
-        })
+        case 'right':
+          return enemies.filter(unit => {
+            return (unit.position === 'left' || unit.position === 'center') && !unit.health.unconscious
+          })
 
-      default: // case 'back':
-        return []
-    }
+        default: // case 'back':
+          return []
+      }
+    })()
+
+    // 前衛にいてかつ近接攻撃対象がいない場合, 全ての敵を対象として取得できる
+    if (this.actor.position !== 'back' && reachable.length === 0) return enemies
+    return reachable
   }
 }
