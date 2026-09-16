@@ -18,12 +18,14 @@ export class CombatFormation {
   private units: Unit[]
   private back: Map<number, Unit | null>
   private front: Map<string, Unit | null>
+  public barrier: Record<Side, boolean> // 距離による修正を倍にするフラグ
 
   constructor(actor: Unit, units: Unit[]) {
     this.actor = actor
     this.units = units
     this.back = new Map<number, Unit | null>()
     this.front = new Map<string, Unit | null>()
+    this.barrier = { player: false, enemy: false }
     // Front 初期化
     SIDE_KEYS.forEach(side => {
       POSITION_KEYS.slice(1).forEach(position => {
@@ -111,6 +113,6 @@ export class CombatFormation {
     if (this.actor.side === target.side) {
       return 0
     }
-    return target.position === 'back' ? DISTANCE_MOD_BACK : DISTANCE_MOD_FRONT
+    return (target.position === 'back' ? DISTANCE_MOD_BACK : DISTANCE_MOD_FRONT) * (this.barrier[target.side] ? 2 : 1)
   }
 }

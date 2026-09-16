@@ -165,6 +165,9 @@ export class CombatLog {
             case 'cleanse':
               this.pushCleanseMessage(messages, result.judge)
               break
+            case 'barrier':
+              messages.push(<>{`魔法障壁に包まれ、魔法を発動させにくくなった!`}</>)
+              break
             default: // case 'trip': case 'knockedDown': case 'fatal':
               this.pushDmgResolutionMessage(messages, target, result)
           }

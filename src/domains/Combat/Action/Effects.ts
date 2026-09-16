@@ -1,8 +1,8 @@
 // src/domains/Combat/Action/Effects.ts
 
 import { Combat as State } from '..'
-import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type Side, type Position, type CombatUnit as Unit } from '../Unit'
+import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -212,6 +212,10 @@ export class CombatActionEffects {
           // 状態異常解除
           const targets = this.formation.getAllies()
           targets.forEach(target => extraResults.push(...this.spellCleanseRoutine(target)))
+        } else if (effect.kind === 'barrier') {
+          // 魔法障壁
+          const side = this.state.actor.side
+          extraResults.push(this.spellBarrierRoutine(side))
         }
       
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
@@ -351,6 +355,13 @@ export class CombatActionEffects {
 
     const cleanseResult: CleanseResult = { curedStun, curedBerserk, curedDazed, curedFear, target }
     return [{ type: 'cleanse', judge: cleanseResult }]
+  }
+
+  // kind: barrier
+  private spellBarrierRoutine(side: Side): ActionResult {
+    this.formation.barrier[side] = true // 距離による修正を倍にする
+    const barrierResult: BarrierResult = { side }
+    return { type: 'barrier', judge: barrierResult }
   }
 
   //「全力防御」実行

@@ -1,6 +1,6 @@
 // src/domains/Combat/Action/types.ts
 
-import { type DefenseType, type Position, type CombatUnit as Unit } from '../Unit'
+import { type DefenseType, type Side, type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '.'
 import { type SpellElement, type SpellBuffTarget, type SpellDebuffTarget } from '../Spells'
 
@@ -125,6 +125,11 @@ export type CleanseResult = {
   target: Unit
 }
 
+// kind: barrier
+export type BarrierResult = {
+  side: Side
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -137,6 +142,7 @@ export type ActionResult =
   | { type: 'flash', judge: FlashResult }
   | { type: 'heal', judge: HealResult }
   | { type: 'cleanse', judge: CleanseResult }
+  | { type: 'barrier', judge: BarrierResult }
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
