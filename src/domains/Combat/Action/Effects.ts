@@ -158,9 +158,23 @@ export class CombatActionEffects {
     SPELL_ELEMENTS.forEach(spellElement => { actor.spells.cast[spellElement] = 0 })
     const spellJudge = judgeSpell(actor, element, spellId, this.formation, target)
     const effectResults: SpellEffectResult[] = []
+    const extraResults: ActionResult[] = []
+
     if (spellJudge.success) {
       SPELL_LIST[element][spellId].effects?.forEach(effect => {
-        const effectResult = this.applySpellEffect(target, effect)
+        // 効果種別 (effect.kind) ごとに処理
+        let effectResult = {}
+
+        if (effect.kind === 'buff' || effect.kind === 'debuff') {
+          // バフ・デバフ
+          effectResult = this.applySpellEffect(target, effect)
+        } else if (effect.kind === 'debuffAll') {
+          const allies = this.formation.getAllies().filter(unit => unit !== actor)
+          const enemies = this.formation.getEnemies()
+          const rangeTargets = [...allies, ...enemies]
+          rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellDebuffAllRoutine(rangeTarget, actor, effect)))
+        }
+      
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
       })
     }
@@ -187,6 +201,20 @@ export class CombatActionEffects {
       return { kind: 'debuff', target: effect.target, applied }
     }
     return {}
+  }
+
+  // kind: debuffAll
+  private spellDebuffAllRoutine(target: Unit, actor: Unit, effect: Extract<SpellEffect, { kind: 'debuffAll' }>): ActionResult[] {
+    const isAlly = target.side === actor.side
+    const mod = isAlly ? effect.allyResistMod : effect.enemyResistMod
+    const resistJudge = judgeResist(target, mod)
+    if (resistJudge.success) return [] // 抵抗に成功したログは出力しない
+
+    const duration = effect.duration === 'margin' ? -resistJudge.score : effect.duration
+    target.debuff[effect.target] = duration
+
+    const debuffResult = { ...resistJudge, target, statusTarget: effect.target }
+    return [{ type: 'debuffAll', judge: debuffResult }]
   }
 
   //「全力防御」実行
