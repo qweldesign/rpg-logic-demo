@@ -15,28 +15,34 @@ export function judgeAttack(actor: Unit, fullPower: FullPower): Omit<AttackResul
 // 可能な防御のうちで, 最も成功率の高い防御を自動選択する
 // 全力防御選択中は, 最初の防御に失敗しても, 残り試行回数の範囲で別の防御を続けて試みる
 // いずれかが成功すればそこで処理を終了する
-export function judgeDefense(actor: Unit, target: Unit): Omit<DefenseResult, 'ready'>[] {
+export function judgeDefense(actor: Unit, target: Unit, isShoot: boolean = false, extraMod: number = 0): Omit<DefenseResult, 'ready'>[] {
   const defense = target.defense
   const maxAttempts = defense.isFullDefense ? 2 : 1
   const results = []
 
   if (defense.canBlock) {
-    const blockResult = { ...judge(defense.getBlockTarget(actor)), type: 'block' as const }
+    const blockResult = { ...judge(defense.getBlockTarget(actor, isShoot, extraMod)), type: 'block' as const }
     results.push(blockResult)
     if (blockResult.success) return results
   }
 
-  if (defense.canParry && results.length < maxAttempts) {
-    const parryResult = { ...judge(defense.getParryTarget(actor)), type: 'parry' as const }
+  if (!isShoot && defense.canParry && results.length < maxAttempts) {
+    const parryResult = { ...judge(defense.getParryTarget(actor, isShoot, extraMod)), type: 'parry' as const }
     results.push(parryResult)
     if (parryResult.success) return results
   }
 
   if (results.length < maxAttempts) {
-    const dodgeResult = { ...judge(defense.getDodgeTarget(actor)), type: 'dodge' as const }
+    const dodgeResult = { ...judge(defense.getDodgeTarget(actor, isShoot, extraMod)), type: 'dodge' as const }
     results.push(dodgeResult)
   }
   return results
+}
+
+// 射撃・範囲魔法 (kind: trip / dmg / dmgAll / flash) に対する防御判定を配列で返す
+// 射撃に対する防御判定 (受け不可, 止め -2 , 牽制効果排除) を適用する
+export function judgeShootDefense(actor: Unit, target: Unit, extraMod: number = 0): Array<Omit<DefenseResult, 'ready'>> {
+  return judgeDefense(actor, target, true, extraMod)
 }
 
 // ダメージの判定結果を返す

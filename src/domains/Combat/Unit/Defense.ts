@@ -82,7 +82,7 @@ export class CombatDefense {
 
   // 防御 (回避判定) の目標値を取得
   // 各種自身の状況による修正値 (バフ, デバフ, 朦朧状態, 転倒) を含める
-  // 各種戦闘の状況による修正値 (牽制のターゲットによる修正) を含めない
+  // 各種戦闘の状況による修正値 (牽制のターゲット, 射撃による修正等) を含めない
   // 「受け」
   get parryTarget() {
     let mod = 0
@@ -131,40 +131,42 @@ export class CombatDefense {
   }
 
   // 防御 (回避判定) の目標値を取得
-  // 各種状況による修正値 (バフ, デバフ, 朦朧状態, 転倒, 牽制のターゲットによる修正) を含める
+  // 各種状況による修正値 (バフ, デバフ, 朦朧状態, 転倒, 牽制のターゲット, 射撃による修正等) を含める
   // 「受け」
-  getParryTarget(actor: Unit) {
+  getParryTarget(actor: Unit, isShoot: boolean = false, extraMod: number = 0) {
     const feint = actor.attack.feint
-    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
-    return Math.max(4, this.parryTarget - feintScore)
+    const feintScore = (feint && feint.target === this.self && !isShoot) ? feint.score : 0
+    const shootMod = isShoot ? -4 : 0
+    return Math.max(4, this.parryTarget - feintScore + shootMod + extraMod)
   }
 
   // 「止め」
-  getBlockTarget(actor: Unit) {
+  getBlockTarget(actor: Unit, isShoot: boolean = false, extraMod: number = 0) {
     const feint = actor.attack.feint
-    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
-    return Math.max(4, this.blockTarget - feintScore)
+    const feintScore = (feint && feint.target === this.self && !isShoot) ? feint.score : 0
+    const shootMod = isShoot ? -2 : 0
+    return Math.max(4, this.blockTarget - feintScore + shootMod + extraMod)
   }
 
   // 「よけ」
-  getDodgeTarget(actor: Unit) {
+  getDodgeTarget(actor: Unit, isShoot: boolean = false, extraMod: number = 0) {
     const feint = actor.attack.feint
-    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
-    return Math.max(4, this.dodgeTarget - feintScore)
+    const feintScore = (feint && feint.target === this.self && !isShoot) ? feint.score : 0
+    return Math.max(4, this.dodgeTarget - feintScore + extraMod)
   }
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
-  getTarget(actor: Unit): DefenseTarget {
+  getTarget(actor: Unit, isShoot: boolean = false, extraMod: number = 0): DefenseTarget {
     let type, target
     if (this.canBlock) {
       type = 'block' as const
-      target = this.getBlockTarget(actor)
+      target = this.getBlockTarget(actor, isShoot, extraMod)
     } else if (this.canParry) {
       type = 'parry' as const
-      target = this.getParryTarget(actor)
+      target = this.getParryTarget(actor, isShoot, extraMod)
     } else {
       type = 'dodge' as const
-      target = this.getDodgeTarget(actor)
+      target = this.getDodgeTarget(actor, isShoot, extraMod)
     }
     return { type, target }
   }
