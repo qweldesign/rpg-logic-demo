@@ -14,7 +14,7 @@ export class CombatDefense {
   private self: Unit
   public name: {shield: string | null, armor: string}
   private ev: { self: number, weapon: number, shield: number, wt: number }
-  public dr: number
+  private _dr: number
   public isChain : boolean
   public drName: string
   // 状態値
@@ -34,7 +34,7 @@ export class CombatDefense {
       shield: model.equipments.shield.size ? (model.equipments.shield.size * 2) : 0,
       wt: model.equipments.armor.dr
     }
-    this.dr = model.equipments.armor.dr
+    this._dr = model.equipments.armor.dr
     this.isChain = model.equipments.armor.isChain
     this.drName = model.equipments.getDRName()
     this.parryCount = 0
@@ -81,6 +81,7 @@ export class CombatDefense {
   // 「受け」
   get parryTarget() {
     let mod = 0
+    mod += this.self.buff.ev // 回避UPバフ
     if (this.self.health.stunned) mod -= 4
     else if (this.self.health.prone) mod -= 2
     return Math.max(4, this.ev.self + this.ev.weapon + mod)
@@ -89,6 +90,7 @@ export class CombatDefense {
   // 「止め」
   get blockTarget() {
     let mod = 0
+    mod += this.self.buff.ev // 回避UPバフ
     if (this.self.health.stunned) mod -= 4
     else if (this.self.health.prone) mod -= 2
     return Math.max(4, this.ev.self + this.ev.shield + mod)
@@ -97,6 +99,7 @@ export class CombatDefense {
   // 「よけ」
   get dodgeTarget() {
     let mod = 0
+    mod += this.self.buff.ev // 回避UPバフ
     if (this.self.health.stunned) mod -= 4
     else if (this.self.health.prone) mod -= 2
     return Math.max(4, this.ev.self - this.ev.wt + mod)
@@ -116,6 +119,10 @@ export class CombatDefense {
       target = this.dodgeTarget
     }
     return { type, target }
+  }
+
+  get dr(): number {
+    return this._dr + this.self.buff.dr // 防御UPバフ
   }
 
   // 防御 (回避判定) の目標値を取得
