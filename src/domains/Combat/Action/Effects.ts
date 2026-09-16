@@ -3,14 +3,17 @@
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type FullPower, type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance } from '.'
+import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
   private state: State
+  private formation: Formation
 
   constructor(state: State) {
     this.state = state
+    this.formation = state.formation!
   }
 
   //「準備」実行
@@ -152,10 +155,10 @@ export class CombatActionEffects {
   }
 
   //「魔法」実行
-  spell(element: SpellElement, spellId: number): ActionResult[] {
+  spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spells.cast[spellElement] = 0 })
-    return [{ type: 'spell', judge: { ...judgeSpell(actor, element, spellId), effectResults: [] } }]
+    return [{ type: 'spell', judge: { ...judgeSpell(actor, element, spellId, this.formation, target), effectResults: []} }]
   }
 
   //「全力防御」実行
