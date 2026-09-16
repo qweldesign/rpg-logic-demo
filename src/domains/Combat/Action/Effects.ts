@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -201,6 +201,10 @@ export class CombatActionEffects {
           // 全体ダメージ
           const targets = this.formation.getEnemies()
           targets.forEach(target => extraResults.push(...this.spellDmgRoutine(target, effect)))
+        } else if (effect.kind === 'flash') {
+          // 閃光
+          const targets = this.formation.getEnemies()
+          targets.forEach(target => extraResults.push(...this.spellFlashRoutine(target)))
         }
       
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
@@ -283,6 +287,32 @@ export class CombatActionEffects {
 
     const dmgJudge = rollSpellDmg(this.state.actor, effect.dice, effect.dmgType, target, metalPenalty)
     results.push(...this.resolveDmg(dmgJudge, target)) // ダメージ適用
+
+    return results
+  }
+
+  // kind: flash
+  private spellFlashRoutine(target: Unit): ActionResult[] {
+    const results: ActionResult[] = []
+
+    // 精神集中中の対象は, 目を閉じているため自動的に対象外とする
+    // (維持判定を行うことになると, かなり強力な魔法になってしまう)
+    const isCasting = SPELL_ELEMENTS.some(element => target.spells.cast[element] > 0)
+    if (isCasting) return results
+    
+    const canDefend = target.defense.canDefend
+    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
+
+    for (const defenseResult of defenseResults) {
+      results.push(defenseResult)
+      if (defenseResult.type === 'defense' && defenseResult.judge.success) {
+        return results // 防御に成功した場合はここで処理を止める
+      }
+    }
+
+    target.debuff.flashed = 1 // 目くらみ
+    const flashResult: FlashResult = { roll: 0, success: false, critical: false, target }
+    results.push({ type: 'flash', judge: flashResult }) // 成否を問わない結果をpush (ログ表示用)
 
     return results
   }
