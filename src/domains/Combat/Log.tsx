@@ -2,7 +2,8 @@
 
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
-import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type FeintResult, type ActionResult } from './Action'
+import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type FeintResult, type SpellResult, type ActionResult } from './Action'
+import { SPELL_ELEMENT_LABELS } from './Spells'
 
 let count = 0
 
@@ -36,6 +37,12 @@ export class CombatLog {
 
       case 'feint':
         return `${ACTION_LABELS[request.key]}:${this.createFeintResultLabel(results)}`
+
+      case 'cast':
+        return `${ACTION_LABELS[request.key]}:${SPELL_ELEMENT_LABELS[request.options.element].slice(0, 1)}(${this.actor.spells.cast[request.options.element]})`
+
+      case 'spell':
+        return (results[0].judge as SpellResult).spell
 
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
@@ -143,6 +150,15 @@ export class CombatLog {
           if (result.type !== 'feint') return
           this.pushFeintMessages(messages, actor, target, result.judge)
         })
+        break
+      }
+
+      case 'cast': {
+        messages.push(<>{`${actor} は ${SPELL_ELEMENT_LABELS[request.options.element]} の呪文に集中している`}</>)
+        break
+      }
+      case 'spell': {
+        messages.push(<>{`${actor} の ${(results[0].judge as SpellResult).spell} 発動!!`}</>)
         break
       }
       case 'defense': {

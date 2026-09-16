@@ -2,6 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Position } from '../Unit'
+import { type SpellElement } from '../Spells'
 
 // 行動可否判定を司るクラス / Action.availability に対応
 export class CombatActionAvailability {
@@ -44,6 +45,18 @@ export class CombatActionAvailability {
   // 「攻撃」と同条件
   canFeint(): boolean {
     return this.canAttack()
+  }
+
+  //「集中」実行可否取得
+  // 該当する系譜の魔法の技能値が11以上であること
+  canCast(element: SpellElement): boolean {
+    return this.state.actor.spells.level[element] > 10
+  }
+
+  //「魔法」実行可否取得
+  // 該当する系譜の魔法の集中時間が1以上であること
+  canSpell(element: SpellElement): boolean {
+    return this.state.actor.spells.cast[element] > 0
   }
 
   //「全力防御」実行可否取得

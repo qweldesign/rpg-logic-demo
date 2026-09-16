@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
+import { SPELL_ELEMENTS, SPELL_ELEMENT_LABELS, SPELL_LIST, type SpellElement } from '../../domains/Combat/Spells'
 
-type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'attackOption' | 'confirmFeint' | 'confirmDefense' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'attackOption' | 'confirmFeint' | 'confirmSpell' | 'elements' | 'spell' | 'confirmDefense' | 'move' | 'target' | 'hidden'
 
-type TargetPalette = 'attack' | 'feint' | 'all'
+type TargetPalette = 'attack' | 'feint' | 'spell' | 'all'
 
 function Action({ store }: { store: Store }) {
   // 状態管理
@@ -20,10 +21,21 @@ function Action({ store }: { store: Store }) {
   // 防御タイプ
   const defenseType = { parry: '受け', block: '止め', dodge: 'よけ' }
 
+  // 魔法の対象選択パレット用の対象プール
+  const spellTargetPool = actionOptions.element !== undefined && actionOptions.spellId !== undefined
+    ? (() => {
+        const scope = SPELL_LIST[actionOptions.element][actionOptions.spellId].targetScope
+        return scope === 'all' ? store.target.all
+          : scope === 'enemy' ? store.target.enemies
+          : store.target.allies
+      })()
+    : []
+
   // execute
   const execute = async () => {
     const request = { key: actionKey, options: actionOptions, target: actionTarget } as ActionRequest
     await store.execute(request)
+    if (store.unlocked) reset() // 魔法の発動等ターンを終えない行動時にもパレットの表示状態を更新する
   }
 
   // execute後, 変数を初期状態に戻す
@@ -71,6 +83,14 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.feint}
           onClick={() => { setActionPalette('target'); setTargetPalette('feint'); setActionKey('feint'); }} // ターゲットパレットへ進む
         >牽制</button>
+        <button
+          disabled={SPELL_ELEMENTS.every(element => !store.availability.cast[element])}
+          onClick={() => { setActionPalette('elements'); setActionKey('cast'); }} // 系譜選択パレットへ進む
+        >集中</button>
+        <button
+          disabled={!store.availability.spell}
+          onClick={() => { setActionPalette('spell'); setActionKey('spell'); }} // 魔法選択パレットへ進む
+        >魔法</button>
         <button
           disabled={!store.availability.defense}
           onClick={() => { setActionPalette('confirmDefense'); setActionKey('defense'); }} // 防御確認パレットへ進む
@@ -161,6 +181,67 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
 
+      {/* 魔法確認 */}
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmSpell'}>
+        {actionOptions.element !== undefined && actionOptions.spellId !== undefined && (
+          <div className="confirm__grid">
+            <div>{store.actor.name}</div>
+            <div className="text-left">{SPELL_ELEMENT_LABELS[actionOptions.element]}: {SPELL_LIST[actionOptions.element][actionOptions.spellId].label}</div>
+          </div>
+        )}
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { setActionPalette('spell'); setActionOptions({}); }} // オプションをリセットし, 魔法選択パレットへ戻る
+        >戻る</button>
+      </div>
+
+      {/* 系譜選択 */}
+      <div className="actions option" data-disable={actionPalette !== 'elements'}>
+        {Object.entries(SPELL_ELEMENT_LABELS).map(([element, label]) => (
+          <button
+            key={element}
+            disabled={!store.availability.cast[element as SpellElement]}
+            onClick={() => { setActionOptions({ element: element as SpellElement }); setIsExecuted(true); }} // 実行
+          >{label}</button>
+        ))}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
+      </div>
+
+      {/* 魔法選択 */}
+      <div className="actions option" data-disable={actionPalette !== 'spell'}>
+        {SPELL_ELEMENTS.map(element => SPELL_LIST[element].map(spell => {
+          if (spell.id >= store.actor.spells.level[element] - 10 || store.actor.spells.cast[element] < 1) return null
+          const isReady = store.actor.spells.cast[element] >= spell.cast
+          const isSelectable = isReady && spell.effects && spell.effects.length > 0
+          return (
+            <button
+              className={`is-small ${isSelectable ? '' : 'is-pending'}`}
+              key={`${element}:${spell.id}`}
+              onClick={() => {
+                if (!isSelectable) return
+                setActionOptions({ element, spellId: spell.id })
+                if (spell.targetScope) {
+                  // 対象範囲が指定された魔法は対象選択を要するため, ターゲットパレットへ進む
+                  setActionPalette('target')
+                  setTargetPalette('spell')
+                } else {
+                  // 対象を要さない魔法は暫定的に自身を対象とし, 確認パレットへ進む
+                  setActionTarget(store.actor)
+                  setActionPalette('confirmSpell')
+                }
+              }}
+            >{spell.label}</button>
+          )
+        }))}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
+      </div>
+
       {/* 全力防御 */}
       <div className="actions confirm" data-disable={actionPalette !== 'confirmDefense'}>
         <div className="confirm__grid">
@@ -225,6 +306,21 @@ function Action({ store }: { store: Store }) {
             ))}
             <button
               onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
+          </>
+        )}
+
+        {/* 魔法 */}
+        {targetPalette === 'spell' && (
+          <>
+            {spellTargetPool.map(target => ( // 魔法の targetScope に応じたプール (ally/enemy/all) から選択する
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmSpell'); setActionTarget(target); }} // ターゲットをセットし, 魔法確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { setActionPalette('spell'); setActionOptions({}); }} // オプションをリセットし, 魔法選択パレットへ戻る
             >戻る</button>
           </>
         )}

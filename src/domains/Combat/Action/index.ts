@@ -3,12 +3,13 @@
 import { Combat as State } from '..'
 import { POSITION_KEYS } from '../Unit'
 import { type Judge, type Score, getRoll, judge, score } from './roll'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult } from './types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
-import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance } from './resolver'
+import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
-export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeEndurance }
+export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
@@ -56,6 +57,11 @@ export class CombatAction {
       fullPowerAttack: this.availabilityChecker.canFullPowerAttack(),
       doubleAttack: this.availabilityChecker.canDoubleAttack(),
       feint: this.availabilityChecker.canFeint(),
+      cast: SPELL_ELEMENTS.reduce((acc, element) => {
+        acc[element] = this.availabilityChecker.canCast(element)
+        return acc
+      }, {} as Record<SpellElement, boolean>),
+      spell: SPELL_ELEMENTS.some(element => this.availabilityChecker.canSpell(element)),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
@@ -99,6 +105,14 @@ export class CombatAction {
         results = this.effects.feint(action.target)
         break
 
+      case 'cast':
+        this.effects.cast(action.options.element)
+        break
+
+      case 'spell':
+        results = this.effects.spell(action.options.element, action.options.spellId)
+        break
+
       case 'defense':
         this.effects.defense()
         break
@@ -127,7 +141,10 @@ export class CombatAction {
     // 回復成功時・立ち上がりはターンを終えず, 同じ actor の行動を続ける
     let nextTurn = true
     const recoveryResult = results.find(result => result.type === 'recovery')
-    if ((action.key === 'recovery' && recoveryResult?.judge.success) || action.key === 'standup') {
+    if ((action.key === 'recovery' && recoveryResult?.judge.success)
+      || action.key === 'standup'
+      || action.key === 'spell'
+    ) {
       this.unlocked = true
       nextTurn = false
     }

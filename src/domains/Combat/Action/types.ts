@@ -2,13 +2,16 @@
 
 import { type DefenseType, type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '.'
+import { type SpellElement, type SpellBuffTarget, type SpellDebuffTarget } from '../Spells'
 
-export const ACTION_KEYS = ['ready', 'attack', 'feint', 'defense', 'move', 'recovery', 'standup', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'cast', 'spell', 'defense', 'move', 'recovery', 'standup', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   ready: '準備',
   attack: '攻撃',
   feint: '牽制',
+  cast: '集中',
+  spell: '魔法',
   defense: '全力防御',
   move: '移動',
   recovery: '回復',
@@ -44,6 +47,8 @@ export type FullPower = typeof FULL_POWER_KEYS[number]
 export type ActionOptions = {
   position?: Position
   fullPower?: FullPower
+  element?: SpellElement
+  spellId?: number
 }
 
 // 行動キーとオプションの組み合わせ
@@ -51,6 +56,8 @@ export type ActionRequest =
   | { key: 'ready', options: {} }
   | { key: 'attack', options: { fullPower: FullPower }, target: Unit }
   | { key: 'feint', options: {}, target: Unit }
+  | { key: 'cast', options: { element: SpellElement } }
+  | { key: 'spell', options: { element: SpellElement, spellId: number }, target: Unit }
   | { key: 'defense', options: {} }
   | { key: 'move', options: { position: Position } }
   | { key: 'recovery', options: {} }
@@ -76,12 +83,24 @@ export type FeintResult = Score & {
   target: Unit
 }
 
+// 魔法の効果適用結果
+export type SpellEffectResult =
+  | { kind: 'buff', target: SpellBuffTarget }
+  | { kind: 'debuff', target: SpellDebuffTarget, applied: boolean }
+
+// 魔法の判定結果 (暫定: 発動した魔法の名称をログ出力)
+export type SpellResult = Judge & {
+  spell: string
+  effectResults: SpellEffectResult[]
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
   | { type: 'feint', judge: FeintResult }
+  | { type: 'spell', judge: SpellResult }
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
