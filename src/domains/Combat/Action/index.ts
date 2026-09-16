@@ -43,6 +43,10 @@ export class CombatAction {
     } else if (!this.actor.health.stunned && this.actor.health.prone) {
       // 転倒状態の場合は「立ち上がり」を自動実行する
       this.ready = this.execute({ key: 'standup', options: {} })
+    } else if (this.actor.debuff.fear) {
+      this.ready = this.actor.position !== 'back'
+        ? this.execute({ key: 'move', options: { position: 'back' } })
+        : this.execute({ key: 'wait', options: {} })
     } else {
       this.ready = Promise.resolve()
     }
