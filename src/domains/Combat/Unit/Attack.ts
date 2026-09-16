@@ -52,6 +52,7 @@ export class CombatAttack {
   get target(): number {
     let target = this.level
     target += this.self.buff.level // 命中UPバフ
+    target += this.self.debuff.flashed > 0 ? -2 : 0 // 目くらみ
     return Math.max(4, target)
   }
 

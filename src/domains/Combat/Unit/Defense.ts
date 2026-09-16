@@ -87,6 +87,7 @@ export class CombatDefense {
   get parryTarget() {
     let mod = 0
     mod += this.self.buff.ev // 回避UPバフ
+    mod += this.self.debuff.flashed > 0 ? -1 : 0 // 目くらみ
     if (this.self.health.stunned) mod -= 4
     else if (this.self.health.prone) mod -= 2
     return Math.max(4, this.ev.self + this.ev.weapon + mod)
@@ -96,6 +97,7 @@ export class CombatDefense {
   get blockTarget() {
     let mod = 0
     mod += this.self.buff.ev // 回避UPバフ
+    mod += this.self.debuff.flashed > 0 ? -1 : 0 // 目くらみ
     if (this.self.health.stunned) mod -= 4
     else if (this.self.health.prone) mod -= 2
     return Math.max(4, this.ev.self + this.ev.shield + mod)
@@ -105,6 +107,7 @@ export class CombatDefense {
   get dodgeTarget() {
     let mod = 0
     mod += this.self.buff.ev // 回避UPバフ
+    mod += this.self.debuff.flashed > 0 ? -1 : 0 // 目くらみ
     if (this.self.health.stunned) mod -= 4
     else if (this.self.health.prone) mod -= 2
     return Math.max(4, this.ev.self - this.ev.wt + mod)
