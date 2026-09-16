@@ -108,6 +108,23 @@ function Combat() {
     }
   }, [result])
 
+  // 死亡したユニットの除名
+  useEffect(() => {
+    const state = stateRef.current
+    if (result === 'win' && state && !state.deadExpelled) {
+      state.deadExpelled = true
+      const saveData = new SaveData()
+      const formation = saveData.loadFormation()
+      const deadMemberIds = state.units
+        .filter(unit => unit.side === 'player' && unit.health.dead)
+        .map(unit => formation[unit.combatId - 1]!) // 除名するユニットの id を取得
+        .sort((a, b) => b - a) // id の若い順に処理
+      deadMemberIds.forEach(id => {
+        saveData.removeModel(String(id).padStart(2, '0'))
+      })
+    }
+  }, [result])
+
   // 開幕
   useEffect(() => {
     if (!stateRef.current) {
