@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Side, type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -84,6 +84,16 @@ export class CombatActionEffects {
 
     // 防御不能攻撃 (クリティカル) または対象が全力攻撃ターンの場合は空の結果を返す
     if (!canDefend) return results
+
+    // 魔法による防御判定 (緑の魔法「風の盾」)
+    if (target.spells.cast.green >= 2) {
+      const spellDefenseJudge = judgeSpellDefense(target)
+      target.spells.cast.green = 0 // これまでの精神集中を無効にする
+      results.push({ type: 'spellDefense', judge: { ...spellDefenseJudge, target } })
+      if (spellDefenseJudge.success) {
+        return results // 防御に成功したら処理を抜ける
+      }
+    }
 
     // 「受け」「止め」試行回数を加算
     for (const defenseJudge of defenseJudges) {

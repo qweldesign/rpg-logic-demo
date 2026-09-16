@@ -77,6 +77,11 @@ export type DefenseResult = Judge & {
   target?: Unit // 範囲魔法など対象を特定できない場合のログ表示用 (ログ上では以降もこの属性を引き継ぐ)
 }
 
+// 魔法による防御判定結果
+export type SpellDefenseResult = Judge & {
+  target: Unit
+}
+
 // ダメージ判定結果
 export type DmgResult = Judge & {
   target?: Unit // 範囲魔法など対象を特定できない場合のログ表示用 (ログ上では以降もこの属性を引き継ぐ)
@@ -134,6 +139,7 @@ export type BarrierResult = {
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
+  | { type: 'spellDefense', judge: SpellDefenseResult }
   | { type: 'dmg', judge: DmgResult }
   | { type: 'feint', judge: FeintResult }
   | { type: 'spell', judge: SpellResult }

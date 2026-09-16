@@ -45,6 +45,11 @@ export function judgeShootDefense(actor: Unit, target: Unit, extraMod: number = 
   return judgeDefense(actor, target, true, extraMod)
 }
 
+// 魔法による防御判定結果
+export function judgeSpellDefense(target: Unit): Judge {
+  return judge(target.spells.level.green) // 緑の魔法「風の盾」
+}
+
 // ダメージの判定結果を返す
 export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower, isCritical: boolean = false): DmgResult {
   let { dr, isChain } = target.defense

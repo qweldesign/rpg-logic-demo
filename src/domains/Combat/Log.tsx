@@ -63,6 +63,9 @@ export class CombatLog {
         case 'attack':
           success = result.judge.success
           break
+        case 'spellDefense':
+          success = !result.judge.success
+          break
         case 'defense':
           success = !result.judge.success
           break
@@ -225,6 +228,11 @@ export class CombatLog {
           // 受け成功時のみ非準備状態への変化をログに表示
           messages.push(<>{`${target.name} の ${target.attack.name} は非準備状態になった`}</>)
         }
+        break
+
+      case 'spellDefense':
+        messages.push(<>{`${target.name} は「風の盾」を発動した!`}</>)
+        messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
         break
 
       case 'dmg':
