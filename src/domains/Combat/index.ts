@@ -22,6 +22,7 @@ export class Combat {
   public rewardCp: number // 報酬Cp
   public rewardGold: number // 報酬金
   public rewardGranted: boolean // 報酬付与の二重処理防止
+  public deadExpelled: boolean // 死亡ユニット除名の二重処理防止
 
   constructor(models: UnitModel[], playLog: () => Promise<void>, usedRoster: boolean, rewardCp: number, rewardGold: number) {
     this.round = 1 // 1からカウント
@@ -38,6 +39,7 @@ export class Combat {
     this.rewardCp = rewardCp
     this.rewardGold = rewardGold
     this.rewardGranted = false
+    this.deadExpelled = false
   }
 
   get actor() {
