@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -205,6 +205,13 @@ export class CombatActionEffects {
           // 閃光
           const targets = this.formation.getEnemies()
           targets.forEach(target => extraResults.push(...this.spellFlashRoutine(target)))
+        } else if (effect.kind === 'heal') {
+          // 回復
+          extraResults.push(...this.spellHealRoutine(target, effect))
+        } else if (effect.kind === 'cleanse') {
+          // 状態異常解除
+          const targets = this.formation.getAllies()
+          targets.forEach(target => extraResults.push(...this.spellCleanseRoutine(target)))
         }
       
         if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
@@ -315,6 +322,35 @@ export class CombatActionEffects {
     results.push({ type: 'flash', judge: flashResult }) // 成否を問わない結果をpush (ログ表示用)
 
     return results
+  }
+
+  // kind: heal
+  private spellHealRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'heal' }>): ActionResult[] {
+    const healedAmount = Math.min(Math.floor(target.health.maxHp * effect.fraction), target.health.injury)
+    if (healedAmount > 0) target.health.injury -= healedAmount // Hpの回復
+    const curedStun = target.health.stunned
+    if (curedStun) target.health.stunned = false // 朦朧状態からの復帰
+    
+    const healResult: HealResult = { healedAmount, curedStun, target }
+    return [{ type: 'heal', judge: healResult }]
+  }
+
+  // kind: cleanse
+  private spellCleanseRoutine(target: Unit): ActionResult[] {
+    const curedStun = target.health.stunned
+    const curedBerserk = target.debuff.berserk
+    const curedDazed = target.debuff.dazed
+    const curedFear = target.debuff.fear
+    if (!curedStun && !curedDazed && !curedBerserk && !curedFear) return []
+
+    // 各種状態異常からの復帰
+    target.health.stunned = false
+    target.debuff.dazed = 0
+    target.debuff.berserk = 0
+    target.debuff.fear = 0
+
+    const cleanseResult: CleanseResult = { curedStun, curedBerserk, curedDazed, curedFear, target }
+    return [{ type: 'cleanse', judge: cleanseResult }]
   }
 
   //「全力防御」実行

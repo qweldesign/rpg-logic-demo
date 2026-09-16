@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
-import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type SpellResult, type DebuffAllResult, type ActionResult } from './Action'
+import { type Judge, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type SpellResult, type DebuffAllResult, type HealResult, type CleanseResult, type ActionResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, SPELL_DEBUFF_LABELS } from './Spells'
 
 let count = 0
@@ -159,6 +159,12 @@ export class CombatLog {
             case 'debuffAll':
               this.pushDebuffAllMessage(messages, result.judge)
               break
+            case 'heal':
+              this.pushHealMessage(messages, result.judge)
+              break
+            case 'cleanse':
+              this.pushCleanseMessage(messages, result.judge)
+              break
             default: // case 'trip': case 'knockedDown': case 'fatal':
               this.pushDmgResolutionMessage(messages, target, result)
           }
@@ -244,6 +250,24 @@ export class CombatLog {
   private pushDebuffAllMessage(messages: ReactNode[], judge: DebuffAllResult) {
     const targetName = judge.target.name
     messages.push(<>{`${targetName} は ${SPELL_DEBUFF_LABELS[judge.statusTarget]} 状態になった!`}</>)
+  }
+
+  // kind: heal
+  private pushHealMessage(messages: ReactNode[], judge: HealResult) {
+    const targetName = judge.target.name
+   if (judge.healedAmount > 0) messages.push(<>{`${targetName} の傷が, ${judge.healedAmount} 点回復した!`}</>)
+    if (judge.curedStun) messages.push(<>{`${targetName} は朦朧状態から回復した!`}</>)
+  }
+
+  // kind: cleanse
+  private pushCleanseMessage(messages: ReactNode[], judge: CleanseResult) {
+    const targetName = judge.target.name
+    const cured: string[] = []
+    if (judge.curedStun) cured.push('朦朧状態')
+    if (judge.curedBerserk) cured.push('狂戦士状態')
+    if (judge.curedDazed) cured.push('幻惑状態')
+    if (judge.curedFear) cured.push('恐慌状態')
+    messages.push(<>{`${targetName} の ${cured.join('・')} が解除された`}</>)
   }
   
   // 勝利/敗北時ログ

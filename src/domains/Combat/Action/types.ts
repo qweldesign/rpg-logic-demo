@@ -109,6 +109,22 @@ export type FlashResult = Judge & {
   target: Unit
 }
 
+// kind: heal (target を直接持つ)
+export type HealResult = {
+  healedAmount: number // 回復負傷量 (キャップ済み)
+  curedStun: boolean
+  target: Unit
+}
+
+// kind: cleanse (target を直接持つ)
+export type CleanseResult = {
+  curedStun: boolean
+  curedBerserk: boolean
+  curedDazed: boolean
+  curedFear: boolean
+  target: Unit
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -119,6 +135,8 @@ export type ActionResult =
   | { type: 'debuffAll', judge: DebuffAllResult }
   | { type: 'trip', judge: Judge }
   | { type: 'flash', judge: FlashResult }
+  | { type: 'heal', judge: HealResult }
+  | { type: 'cleanse', judge: CleanseResult }
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
