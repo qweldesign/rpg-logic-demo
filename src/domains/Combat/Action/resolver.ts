@@ -90,3 +90,8 @@ export function judgeEndurance(target: Unit): Judge {
 export function judgeResist(target: Unit, mod: number = 0): Score {
   return score(target.mre + mod)
 }
+
+// 精神集中の維持判定の結果を返す
+export function judgeMaintain(target: Unit): Judge {
+  return judge(target.mre - 4)
+}

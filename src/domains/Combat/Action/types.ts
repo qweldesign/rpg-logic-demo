@@ -135,6 +135,11 @@ export type BarrierResult = {
   side: Side
 }
 
+// 精神集中破棄
+export type CastCanceldResult = {
+  target: Unit
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -152,3 +157,4 @@ export type ActionResult =
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
+  | { type: 'castCanceled', judge: CastCanceldResult }

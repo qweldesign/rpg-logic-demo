@@ -2,7 +2,7 @@
 
 import { Combat as State } from '..'
 import { type Side, type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
+import { type FullPower, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist, judgeMaintain } from '.'
 import { type CombatFormation as Formation } from '../Formation'
 import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
@@ -62,10 +62,11 @@ export class CombatActionEffects {
 
     // 防御判定
     const canDefend = !attackJudge.critical && target.defense.canDefend
-    const defenseResults = this.tryDefend(target, canDefend, () => judgeDefense(actor, target))
+    const { defenseResults, castCanceledResults } = this.tryDefend(target, canDefend, () => judgeDefense(actor, target))
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)
       if (defenseResult.type === 'defense' && defenseResult.judge.success) {
+        results.push(...castCanceledResults)
         return results // 防御に成功した場合はここで処理を止める
       }
     }
@@ -78,20 +79,21 @@ export class CombatActionEffects {
   }
 
   // 防御試行
-  private tryDefend(target: Unit, canDefend: boolean, getDefenseJudges: () => Omit<DefenseResult, 'ready'>[]): ActionResult[] {
-    const results: ActionResult[] = []
+  private tryDefend(target: Unit, canDefend: boolean, getDefenseJudges: () => Omit<DefenseResult, 'ready'>[]): { defenseResults: ActionResult[], castCanceledResults: ActionResult[]} {
+    const defenseResults: ActionResult[] = []
+    const castCanceledResults: ActionResult[] = []
     const defenseJudges = getDefenseJudges()
 
     // 防御不能攻撃 (クリティカル) または対象が全力攻撃ターンの場合は空の結果を返す
-    if (!canDefend) return results
+    if (!canDefend) return { defenseResults, castCanceledResults }
 
     // 魔法による防御判定 (緑の魔法「風の盾」)
     if (target.spells.cast.green >= 2) {
       const spellDefenseJudge = judgeSpellDefense(target)
       target.spells.cast.green = 0 // これまでの精神集中を無効にする
-      results.push({ type: 'spellDefense', judge: { ...spellDefenseJudge, target } })
+      defenseResults.push({ type: 'spellDefense', judge: { ...spellDefenseJudge, target } })
       if (spellDefenseJudge.success) {
-        return results // 防御に成功したら処理を抜ける
+        return { defenseResults, castCanceledResults } // 防御に成功したら処理を抜ける
       }
     }
 
@@ -106,13 +108,41 @@ export class CombatActionEffects {
       }
 
       // 判定結果をpush (ログ表示用に target も含めること)
-      results.push({ type: 'defense', judge: { ...defenseJudge, ready: target.attack.ready, target } })
+      defenseResults.push({ type: 'defense', judge: { ...defenseJudge, ready: target.attack.ready, target } })
+
+      // 精神集中中なら維持判定
+      castCanceledResults.push(...this.maintainCast(target))
 
       // 防御に成功したら処理を抜ける
       if (defenseJudge.success) break
     }
 
-    return results
+    return { defenseResults, castCanceledResults }
+  }
+
+  // 自身の精神集中を破棄
+  cancelCastSelf(): void {
+    SPELL_ELEMENTS.forEach(element => { this.state.actor.spells.cast[element] = 0 })
+  }
+  
+  // 対象の精神集中を破棄
+  private cancelCast(target: Unit): ActionResult[] {
+    // 集中維持する魔法が無ければ, 何もしない
+    const castingElement = SPELL_ELEMENTS.find(element => target.spells.cast[element] > 0)
+    if (!castingElement) return []
+    target.spells.cast[castingElement] = 0
+    return [{ type: 'castCanceled', judge: { target } }]
+  }
+
+  // 精神集中の維持判定を試行
+  private maintainCast(target: Unit): ActionResult[] {
+    // 集中維持する魔法が無ければ, 何もしない
+    const castingElement = SPELL_ELEMENTS.find(element => target.spells.cast[element] > 0)
+    if (!castingElement) return []
+    // 維持判定に成功すれば, 何もしない
+    const maintainJudge = judgeMaintain(target)
+    if (maintainJudge.success) return []
+    return this.cancelCast(target) // 維持判定に失敗したら, 精神集中を破棄
   }
 
   // ダメージ効果
@@ -148,6 +178,11 @@ export class CombatActionEffects {
       }
     }
 
+    // 精神集中を破棄 (朦朧状態・気絶が発生した際はログ表示しない)
+    if (!target.health.stunned && !target.health.unconscious) {
+      this.cancelCast(target)
+    }
+
     return results
   }
 
@@ -177,7 +212,6 @@ export class CombatActionEffects {
   //「魔法」実行
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
-    SPELL_ELEMENTS.forEach(spellElement => { actor.spells.cast[spellElement] = 0 })
     const spellJudge = judgeSpell(actor, element, spellId, this.formation, target)
     const effectResults: SpellEffectResult[] = []
     const extraResults: ActionResult[] = []
@@ -275,11 +309,12 @@ export class CombatActionEffects {
     const results: ActionResult[] = []
 
     const canDefend = target.defense.canDefend
-    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
+    const { defenseResults, castCanceledResults } = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
 
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)
       if (defenseResult.type === 'defense' && defenseResult.judge.success) {
+        results.push(...castCanceledResults)
         return { results, applied: false } // 防御に成功した場合はここで処理を止める
       }
     }
@@ -297,11 +332,12 @@ export class CombatActionEffects {
     const extraMod = metalPenalty ? -4 : 0 // 電属性による回避判定へ課される修正
 
     const canDefend = target.defense.canDefend
-    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target, extraMod))
+    const { defenseResults, castCanceledResults } = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target, extraMod))
 
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)
       if (defenseResult.type === 'defense' && defenseResult.judge.success) {
+        results.push(...castCanceledResults)
         return results // 防御に成功した場合はここで処理を止める
       }
     }
@@ -322,7 +358,7 @@ export class CombatActionEffects {
     if (isCasting) return results
     
     const canDefend = target.defense.canDefend
-    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
+    const { defenseResults } = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
 
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)

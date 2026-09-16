@@ -7,10 +7,10 @@ import { type Judge, type Score, getRoll, judge, score } from './roll'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type SpellDefenseResult, type DmgResult, type FeintResult, type SpellEffectResult, type SpellResult, type DebuffAllResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
-import { judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from './resolver'
+import { judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist, judgeMaintain } from './resolver'
 import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
-export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type SpellDefenseResult, type DmgResult, type FeintResult, type SpellEffectResult, type SpellResult, type DebuffAllResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist }
+export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type SpellDefenseResult, type DmgResult, type FeintResult, type SpellEffectResult, type SpellResult, type DebuffAllResult, type FlashResult, type HealResult, type CleanseResult, type BarrierResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, judgeSpellDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist, judgeMaintain }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {
@@ -99,6 +99,9 @@ export class CombatAction {
   async execute (action: ActionRequest) {
     // コマンドパレットをロック (アンロックはコンストラクタで行われる)
     this.unlocked = false
+
+    // 「集中」以外を実行した場合, 精神集中を破棄
+    if (action.key !== 'cast') this.effects.cancelCastSelf()
 
     // 行動実行
     let results: ActionResult[] = []
