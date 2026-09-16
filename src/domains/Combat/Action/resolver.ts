@@ -54,6 +54,15 @@ export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower, isCriti
   return { roll, success: roll > 0, critical: roll >= 10 }
 }
 
+// 魔法によるダメージの判定結果を返す
+export function rollSpellDmg(actor: Unit, count: number, dmgType: 0 | 1 | 2, target: Unit): DmgResult {
+  const { dr, isChain } = target.defense
+  const mod = actor.spells.getDmgMod(dmgType, dr, isChain)
+  const rate = actor.spells.getDmgRate(dmgType)
+  const roll = Math.max(0, Math.floor(getRoll(count, mod) * rate))
+  return { roll, success: roll > 0, critical: roll >= 10 }
+}
+
 // 牽制の判定結果を返す (成功度がそのまま target の次の防御目標値へのペナルティになる)
 export function judgeFeint(actor: Unit, target: Unit): FeintResult {
   return { target, ...score(actor.attack.target) }

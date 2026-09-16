@@ -1,7 +1,7 @@
 // src/domains/Combat/Spells/index.ts
 
 import { type ParameterKey } from '../../Character'
-import { type CombatUnit as Unit } from '../Unit'
+import { DMG_RATE, type CombatUnit as Unit } from '../Unit'
 import { DISTANCE_MOD_BACK, CombatFormation as Formation } from '../Formation'
 
 export const SPELL_ELEMENTS = ['blue', 'red', 'green'] as const
@@ -137,5 +137,15 @@ export class CombatSpells {
     } else {
       return 0
     }
+  }
+  
+  // 攻撃型によるダメージ倍率を取得
+  getDmgRate(dmgType: 0 | 1 | 2): number {
+    return DMG_RATE[dmgType]
+  }
+  
+  // 攻撃 (ダメージ判定) のためのダメージ修正値を取得
+  getDmgMod(dmgType: 0 | 1 | 2, dr: number, isChain: boolean): number {
+    return - (dmgType === 2 && isChain ? Math.floor(dr / 2) : dr)
   }
 }

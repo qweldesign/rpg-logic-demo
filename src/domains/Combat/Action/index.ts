@@ -7,10 +7,10 @@ import { type Judge, type Score, getRoll, judge, score } from './roll'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellEffectResult, type SpellResult, type DebuffAllResult, type ActionResult } from './types'
 import { CombatActionAvailability as Availability } from './Availability'
 import { CombatActionEffects as Effects } from './Effects'
-import { judgeAttack, judgeDefense, judgeShootDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from './resolver'
+import { judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from './resolver'
 import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
-export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellEffectResult, type SpellResult, type DebuffAllResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist }
+export { type Judge, type Score, getRoll, judge, score, ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, type ActionKey, type FullPower, type ActionOptions, type ActionRequest, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellEffectResult, type SpellResult, type DebuffAllResult, type ActionResult, judgeAttack, judgeDefense, judgeShootDefense, rollDmg, rollSpellDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 export class CombatAction {

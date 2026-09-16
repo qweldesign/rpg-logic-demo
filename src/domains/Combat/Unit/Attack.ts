@@ -4,7 +4,7 @@ import { type Dmg } from '../../Character'
 import { type CombatUnitModel as UnitModel, type CombatUnit as Unit } from '.'
 import { type FullPower } from '../Action'
 
-const DMG_RATE = [1, 1.5, 2]
+export const DMG_RATE = [1, 1.5, 2]
 
 // 牽制の定義
 export type Feint = {
