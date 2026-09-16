@@ -263,9 +263,12 @@ export class CombatActionEffects {
   // kind: dmg, dmgAll
   spellDmgRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'dmg' }> | Extract<SpellEffect, { kind: 'dmgAll' }>): ActionResult[] {
     const results: ActionResult[] = []
+    
+    const metalPenalty = effect.kind === 'dmg' && effect.metalPenalty
+    const extraMod = metalPenalty ? -4 : 0 // 電属性による回避判定へ課される修正
 
     const canDefend = target.defense.canDefend
-    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target))
+    const defenseResults = this.tryDefend(target, canDefend, () => judgeShootDefense(this.state.actor, target, extraMod))
 
     for (const defenseResult of defenseResults) {
       results.push(defenseResult)
@@ -274,7 +277,7 @@ export class CombatActionEffects {
       }
     }
 
-    const dmgJudge = rollSpellDmg(this.state.actor, effect.dice, effect.dmgType, target)
+    const dmgJudge = rollSpellDmg(this.state.actor, effect.dice, effect.dmgType, target, metalPenalty)
     results.push(...this.resolveDmg(dmgJudge, target)) // ダメージ適用
 
     return results

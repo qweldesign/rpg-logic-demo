@@ -55,8 +55,9 @@ export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower, isCriti
 }
 
 // 魔法によるダメージの判定結果を返す
-export function rollSpellDmg(actor: Unit, count: number, dmgType: 0 | 1 | 2, target: Unit): DmgResult {
-  const { dr, isChain } = target.defense
+export function rollSpellDmg(actor: Unit, count: number, dmgType: 0 | 1 | 2, target: Unit, metalPenalty: boolean = false): DmgResult {
+  let { dr, isChain } = target.defense
+  if (metalPenalty) dr = 0 // 電属性によるダメージ貫通
   const mod = actor.spells.getDmgMod(dmgType, dr, isChain)
   const rate = actor.spells.getDmgRate(dmgType)
   const roll = Math.max(0, Math.floor(getRoll(count, mod) * rate))
