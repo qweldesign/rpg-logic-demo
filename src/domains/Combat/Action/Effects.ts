@@ -2,9 +2,9 @@
 
 import { Combat as State } from '..'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type FullPower, type DefenseResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance } from '.'
+import { type FullPower, type DefenseResult, type SpellEffectResult, type ActionResult, judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeSpell, judgeEndurance, judgeResist } from '.'
 import { type CombatFormation as Formation } from '../Formation'
-import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
+import { SPELL_ELEMENTS, type SpellElement, type SpellEffect, SPELL_LIST } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class CombatActionEffects {
@@ -158,7 +158,37 @@ export class CombatActionEffects {
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spells.cast[spellElement] = 0 })
-    return [{ type: 'spell', judge: { ...judgeSpell(actor, element, spellId, this.formation, target), effectResults: []} }]
+    const spellJudge = judgeSpell(actor, element, spellId, this.formation, target)
+    const effectResults: SpellEffectResult[] = []
+    if (spellJudge.success) {
+      SPELL_LIST[element][spellId].effects?.forEach(effect => {
+        const effectResult = this.applySpellEffect(target, effect)
+        if (Object.keys(effectResult).length > 0) effectResults.push(effectResult as SpellEffectResult)
+      })
+    }
+    return [{ type: 'spell', judge: { ...spellJudge, effectResults } }]
+  }
+
+  // 魔法の効果適用
+  private applySpellEffect(target: Unit, effect?: SpellEffect): SpellEffectResult | {} {
+    if (!effect) return {}
+    if (effect.kind === 'buff') {
+      if (effect.target === 'level') target.buff.addLevelBuff()
+      else if (effect.target === 'dmg') target.buff.addDmgBuff()
+      else if (effect.target === 'ev') target.buff.addEvBuff()
+      else if (effect.target === 'dr') target.buff.addDrBuff()
+      return { kind: 'buff', target: effect.target }
+    }
+    if (effect.kind === 'debuff') {
+      const resistJudge = judgeResist(target, effect.resistMod)
+      const applied = !resistJudge.success
+      if (applied) {
+        const duration = effect.duration === 'margin' ? -resistJudge.score : effect.duration
+        target.debuff[effect.target] = duration
+      }
+      return { kind: 'debuff', target: effect.target, applied }
+    }
+    return {}
   }
 
   //「全力防御」実行

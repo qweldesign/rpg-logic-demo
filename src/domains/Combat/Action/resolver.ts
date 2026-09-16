@@ -2,7 +2,7 @@
 
 import { type CombatUnit as Unit } from '../Unit'
 import { type CombatFormation as Formation } from '../Formation'
-import { type Judge, getRoll, judge, score, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from '.'
+import { type Judge, type Score, getRoll, judge, score, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from '.'
 import { SPELL_LIST, type SpellElement } from '../Spells'
 
 // 攻撃の判定結果を返す
@@ -62,4 +62,10 @@ export function judgeSpell(actor: Unit, element: SpellElement, spellId: number, 
 // 生命力判定の結果を返す (転倒判定・回復判定・致死判定)
 export function judgeEndurance(target: Unit): Judge {
   return judge(target.pre)
+}
+
+// 知力判定の結果を返す (魔法に対する抵抗判定)
+// 魔法ごとに異なる修正値を引数として受け取る
+export function judgeResist(target: Unit, mod: number = 0): Score {
+  return score(target.mre + mod)
 }
