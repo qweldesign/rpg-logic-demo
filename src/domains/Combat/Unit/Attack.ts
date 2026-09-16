@@ -15,6 +15,7 @@ export type Feint = {
 
 export class CombatAttack {
   // 設定値
+  private self: Unit
   public name: string
   public level: number // 大盾による修正込み
   public dmg: Dmg
@@ -24,7 +25,8 @@ export class CombatAttack {
   public feint: Feint | null
   public ready: boolean // 準備の可否
 
-  constructor(model: UnitModel) {
+  constructor(self: Unit, model: UnitModel) {
+    this.self = self
     this.name = model.equipments.weapon.name
     this.level = model.level
     this.dmg = model.equipments.getDmg(model.dmgMod)
@@ -48,7 +50,9 @@ export class CombatAttack {
   // 各種自身の状況による修正値 (バフ, デバフ) を含める
   // 各種戦闘の状況による修正値 (全力攻撃オプションによる修正) を含めない
   get target(): number {
-    return Math.max(4, this.level)
+    let target = this.level
+    target += this.self.buff.level // 命中UPバフ
+    return Math.max(4, target)
   }
 
   // 攻撃 (命中判定) の目標値を取得
@@ -68,6 +72,7 @@ export class CombatAttack {
     let count = this.dmg.dmgDice
     count -= fullPower === 'dmg' ? 1 : 0 //「ダメージ安定」
     let mod = this.dmg.dmgMod - (this.dmg.dmgType === 2 && isChain ? Math.floor(dr / 2) : dr)
+    mod += this.self.buff.dmg // 攻撃UPバフ
     mod += fullPower === 'dmg' ? 6 : 0 //「ダメージ安定」
     const rate = this.getDmgRate()
     return { count, mod, rate }
