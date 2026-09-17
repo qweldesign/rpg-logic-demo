@@ -43,11 +43,14 @@ export class CombatAction {
     } else if (!this.actor.health.stunned && this.actor.health.prone) {
       // 転倒状態の場合は「立ち上がり」を自動実行する
       this.ready = this.execute({ key: 'standup', options: {} })
+    } else if (this.actor.position === 'back' && !this.availabilityChecker.canMove()) {
+      // 後衛にいて狂戦士状態で, かつ前衛の移動先が無い場合は「待機」を自動実行する
+      this.ready = this.execute({ key: 'wait', options: { status: 'berserk'} })
     } else if (this.actor.debuff.fear) {
       // 恐慌状態の場合は「後退」か「待機」を自動実行する
       this.ready = this.actor.position !== 'back'
         ? this.execute({ key: 'move', options: { position: 'back' } })
-        : this.execute({ key: 'wait', options: {} })
+        : this.execute({ key: 'wait', options: { status: 'fear'} })
     } else {
       this.ready = Promise.resolve()
     }
@@ -72,7 +75,7 @@ export class CombatAction {
       spell: SPELL_ELEMENTS.some(element => this.availabilityChecker.canSpell(element)),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
-        acc[position] = this.availabilityChecker.canMove(position)
+        acc[position] = this.availabilityChecker.canMoveToPosition(position)
         return acc
       }, {} as Record<typeof POSITION_KEYS[number], boolean>),
       wait: this.availabilityChecker.canWait()

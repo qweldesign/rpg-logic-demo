@@ -47,6 +47,7 @@ export type FullPower = typeof FULL_POWER_KEYS[number]
 export type ActionOptions = {
   position?: Position
   fullPower?: FullPower
+  status?: 'berserk' | 'fear'
   element?: SpellElement
   spellId?: number
 }
@@ -62,7 +63,7 @@ export type ActionRequest =
   | { key: 'move', options: { position: Position } }
   | { key: 'recovery', options: {} }
   | { key: 'standup', options: {} }
-  | { key: 'wait', options: {} }
+  | { key: 'wait', options: { status: 'berserk' | 'fear' } }
 
 // 攻撃判定結果
 export type AttackResult = Judge & {

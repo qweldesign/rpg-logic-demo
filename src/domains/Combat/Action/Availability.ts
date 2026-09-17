@@ -1,7 +1,7 @@
 // src/domains/Combat/Action/Availability.ts
 
 import { Combat as State } from '..'
-import { type Position } from '../Unit'
+import { POSITION_KEYS, type Position } from '../Unit'
 import { type SpellElement } from '../Spells'
 
 // 行動可否判定を司るクラス / Action.availability に対応
@@ -65,10 +65,10 @@ export class CombatActionAvailability {
     return !this.state.actor.debuff.berserk
   }
 
-  //「移動」実行可否取得
+  //「移動」実行可否取得 (移動先を指定)
   // 後退: 自身が後方に配置されていないこと, かつ狂戦士状態ではないこと
   // 前進: そこへ既に他の味方ユニットが配置されていないこと
-  canMove(position: Position): boolean {
+  canMoveToPosition(position: Position): boolean {
     const actor = this.state.actor
     const formation = this.state.formation
     if (!formation) return false
@@ -77,6 +77,22 @@ export class CombatActionAvailability {
       return formation[actor.side].back[actor.combatId] === null ? true : false
     } else {
       return formation[actor.side].front[position] === null ? true : false
+    }
+  }
+
+  //「移動」実行可否取得 (全ての移動先に対しての結果)
+  canMove(): boolean {
+    const actor = this.state.actor
+    const formation = this.state.formation
+    if (!formation) return false
+    if (actor.position === 'back') {
+      return POSITION_KEYS.some(position => formation[actor.side].front[position] === null ? true : false)
+    } else {
+      if (actor.debuff.berserk) {
+        return POSITION_KEYS.some(position => formation[actor.side].front[position] === null ? true : false)
+      } else {
+        return true
+      }
     }
   }
 
