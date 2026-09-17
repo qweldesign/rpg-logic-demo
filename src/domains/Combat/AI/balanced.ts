@@ -19,7 +19,7 @@ import { supporter } from './supporter'
  * 
  */
 
-export const balanced: TacticHandler = (actor, state) => {
+export const balanced: TacticHandler = (actor, state, temperType) => {
   // 前衛への恒久コミットを判定
   const isCasting = SPELL_ELEMENTS.some(element => actor.spells.cast[element] > 0)
   const fromtAllyount = getFrontAllyCount(state, actor.side)
@@ -29,11 +29,11 @@ export const balanced: TacticHandler = (actor, state) => {
 
   // 1. 前衛への恒久コミットが成立している場合
   if (actor.aiFrontCommitted) {
-    return base(actor, state, 'wing')
+    return base(actor, state, temperType, 'wing')
   }
   
   // 2. それ以外
-  return supporter(actor, state)
+  return supporter(actor, state, temperType)
 }
 
 // 陣営の前衛 (left/center/right) の人数を取得する
