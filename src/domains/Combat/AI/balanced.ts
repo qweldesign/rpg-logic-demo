@@ -1,6 +1,9 @@
 // src/domains/Combat/AI/balanced.ts
 
+import { Combat as State } from '..'
+import { type Side } from '../Unit'
 import { type TacticHandler } from '.'
+import { base } from './base'
 import { supporter } from './supporter'
 
 /**
@@ -16,10 +19,23 @@ import { supporter } from './supporter'
  */
 
 export const balanced: TacticHandler = (actor, state) => {
+  // 前衛への恒久コミットを判定
+  if (state.round >= 2 && getFrontAllyCount(state, actor.side) === 1) {
+    actor.aiFrontCommitted = true
+  }
 
-  //
-  // ここに自動行動を実装する
-  //
+  // 1. 前衛への恒久コミットが成立している場合
+  if (actor.aiFrontCommitted) {
+    return base(actor, state, 'wing')
+  }
   
+  // 2. それ以外
   return supporter(actor, state)
+}
+
+// 陣営の前衛 (left/center/right) の人数を取得する
+function getFrontAllyCount(state: State, side: Side): number {
+  if (!state.formation) return 0
+  const formation = state.formation[side]
+  return Object.values(formation.front).filter(unit => unit !== null).length
 }

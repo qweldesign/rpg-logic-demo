@@ -59,6 +59,7 @@ export class CombatUnit {
   public spells: Spells
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
   public tacticType: TacticTypeKey | null // 自動行動タイプ
+  public aiFrontCommitted: boolean // AI行動用: 前衛への恒久コミット (術戦士B が前衛の味方1人時に前に出た場合等, 一度成立すると以降解除されない)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
     const { name, maxHp, pre, mre, elements, tacticType } = model
@@ -76,6 +77,7 @@ export class CombatUnit {
     this.spells = new Spells(elements)
     this.history = null
     this.tacticType = tacticType ?? null
+    this.aiFrontCommitted = false
   }
 
   // 各種状態を更新
