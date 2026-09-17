@@ -1,6 +1,8 @@
 // src/domains/Sample/index.ts
 
 import { type Point, type ParameterKey, type CharacterModel, Character, type WeaponKey } from '../Character'
+import { type CombatUnitModel } from '../Combat/Unit'
+import { type TacticTypeKey } from '../Combat/AI'
 
 /**
  * サンプル・キャラクタ生成アルゴリズム
@@ -129,6 +131,8 @@ const NPC_LIST: string[] = [
 
 // サンプル・キャラクタ生成クラス
 class Sample extends Character {
+  public tacticType: TacticTypeKey
+
   constructor(id: number, seed: number, total: number) {
     // シード値を分化して, 乱数を生成する
     const r1 = (seed + Math.floor(seed / 16)) % 4 // 4タイプによる大分類
@@ -150,6 +154,9 @@ class Sample extends Character {
 
     // 装備をセット
     this.setEquips(e, total)
+
+    // 自動行動タイプをセット
+    this.tacticType = this.getTacticType()
   }
 
   // 可能なら技能値を step する
@@ -275,6 +282,27 @@ class Sample extends Character {
     if (st >= 11 && total < 12) this.armor = '革鎧'
     if (st >= 12 && total >= 12) this.armor = 'チェインメイル'
     if (st >= 13 && total >= 16) this.armor = 'プレイトメイル' 
+  }
+
+  // 自動行動タイプを取得
+  getTacticType(): TacticTypeKey {
+    const st = this.getLevel('筋力')
+    const dx = this.getLevel('敏捷力')
+    const int = this.getLevel('知力')
+
+    if (st >= 12 && int < 12 && this.shield.size > 0) return 'defender'
+    else if (st >= 12 && int >= 12) return 'balanced'
+    else if (st >= 13 || dx >= 13) return 'attacker'
+    else if (st < 12 && int >= 13) return 'supporter'
+    else return 'balanced'
+  }
+
+  // 戦闘モデル用データ変換 (tacticType (自動行動タイプ) を追加する
+  get combatUnitModel(): CombatUnitModel {
+    return {
+      ...super.combatUnitModel,
+      tacticType: this.tacticType
+    }
   }
 }
 
