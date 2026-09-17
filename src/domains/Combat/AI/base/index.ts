@@ -3,6 +3,7 @@
 import { Combat as State } from '../..'
 import { type Position, CombatUnit as Unit } from '../../Unit'
 import { type FullPower, type ActionRequest } from '../../Action'
+import { type SpellElement } from '../../Spells'
 
 // 移動先優先順位
 type MovePriority = 'center' | 'wing'
@@ -201,8 +202,12 @@ function isIncapacitated(unit: Unit): boolean {
   return unit.health.stunned || unit.debuff.dazed || unit.debuff.fear
 }
 
-// 攻撃対象のうちから防御目標値 (牽制による修正込み) が最も低い対象を返す関数
-export function pickLowestDefenseTarget(actor: Unit, candidates: Unit[]): Unit | null {
+// 攻撃対象のうちから防御目標値が最も低い対象を返す関数
+// excludeFeint: false で, 牽制による修正込み
+function pickLowestDefenseTarget(actor: Unit, candidates: Unit[], excludeFeint: boolean = false): Unit | null {
+  if (excludeFeint) {
+    return pickByPriority(candidates, unit => unit.defense.target.target)
+  }
   return pickByPriority(candidates, unit => unit.defense.getTarget(actor).target)
 }
 
@@ -218,10 +223,33 @@ export function pickByPriority<T>(candidates: T[], ...keyFns: Array<(unit: T) =>
   return pool[0] ?? null
 }
 
+// 敵前衛がいれば敵前衛を候補とし, いなければ敵全員を候補とする関数
+export function frontOrAll(candidates: Unit[]): Unit[] {
+  const front = candidates.filter(unit => unit.position !== 'back')
+  return front.length > 0 ? front : candidates
+}
+
 // 自身が攻撃者候補全員から受ける防御目標値のうち,
 // 最も不利な値 (=牽制修正が最大にかかった値) を取得する関数
 // (取得した防御目標値を, 全力攻撃/全力防御を選択する判断基準とする)
 function worstOwnDefenseTarget(actor: Unit, attackers: Unit[]): number {
   if (attackers.length === 0) return actor.defense.target.target
   return Math.min(...attackers.map(attacker => actor.defense.getTarget(attacker).target))
+}
+
+// 魔法の基本詠唱パターン (AI/base/*Spell.ts) で共通利用する, 系譜ごとのアクション生成ヘルパー
+export function createSpellActions(actor: Unit, state: State, element: SpellElement) {
+  // cast: 集中を1ターン進める
+  const cast = (): ActionRequest => ({ key: 'cast', options: { element } })
+  
+  // self: 対象を持たない術を発動する
+  const self = (spellId: number): ActionRequest => ({ key: 'spell', options: { element, spellId }, target: actor })
+  
+  // enemy: 敵陣営から防御目標値が最も低い相手を選び, その術を発動する
+  const primaryTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies, true)
+  const enemy = (spellId: number): ActionRequest => primaryTarget
+    ? { key: 'spell', options: { element, spellId }, target: primaryTarget }
+    : { key: 'cast', options: { element } }
+
+  return { cast, self, enemy, primaryTarget }
 }

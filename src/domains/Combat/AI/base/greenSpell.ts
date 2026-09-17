@@ -3,6 +3,7 @@
 import { type Combat as State } from '../..'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
+import { chance, pickByPriority, frontOrAll, createSpellActions } from '.'
 
 /**
  * 緑の魔術師の行動パターン
@@ -27,11 +28,48 @@ import { type ActionRequest } from '../../Action/types'
  * 
  */
 export function greenSpell(actor: Unit, state: State): ActionRequest {
+  const element = 'red'
+  const skill = actor.spells.level[element]
+  const turns = actor.spells.cast[element]
+  const { cast, self, enemy } = createSpellActions(actor, state, element)
 
-  //
-  // ここに自動行動を実装する
-  //
-  
-  console.log(actor, state)
-  return { key: 'defense', options: {} }
+  // 1. 集中
+  if (turns === 0) return cast()
+
+  // 「ヘイスト」の対象選定
+  const hasteTarget = pickByPriority(
+    frontOrAll(state.action!.target.allies),
+    unit => unit.buff.ev === 1 ? 0 : 1,
+    unit => unit.defense.dodgeTarget
+  )
+
+  const haste = (): ActionRequest => hasteTarget
+    ? { key: 'spell', options: { element, spellId: 0 }, target: hasteTarget }
+    : { key: 'cast', options: { element } }
+
+  const fearTarget = pickByPriority(
+    frontOrAll(state.action!.target.enemies),
+    unit => unit.pre,
+    unit => unit.position === 'center' ? 0 : 1
+  )
+
+  const fear = (): ActionRequest => fearTarget
+    ? { key: 'spell', options: { element, spellId: 4 }, target: fearTarget }
+    : { key: 'cast', options: { element } }
+
+  // 2. 集中時間が1ターン
+  if (turns === 1) {
+    if (skill >= 13 && chance(0.75)) return cast() // 集中継続
+    return chance() ? haste() : enemy(1) // ヘイスト / 茨の鞭
+  }
+
+  // 3. 集中時間が2ターン
+  if (turns === 2) {
+    if (skill >= 15 && chance(0.75)) return cast() // 集中継続
+    return enemy(2) // 風の刃
+  }
+
+  // 4. 集中時間が3ターン
+  if (skill >= 16 && chance()) return self(5) // 竜巻
+  return fear() // 恐慌
 }

@@ -3,6 +3,7 @@
 import { type Combat as State } from '../..'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
+import { chance, pickByPriority, frontOrAll, createSpellActions } from '.'
 
 /**
  * 青の魔術師の行動パターン
@@ -25,11 +26,42 @@ import { type ActionRequest } from '../../Action/types'
  * 
  */
 export function blueSpell(actor: Unit, state: State): ActionRequest {
+  const element = 'blue'
+  const skill = actor.spells.level[element]
+  const turns = actor.spells.cast[element]
+  const { cast, enemy } = createSpellActions(actor, state, element)
 
-  //
-  // ここに自動行動を実装する
-  //
-  
-  console.log(actor, state)
-  return { key: 'defense', options: {} }
+  // 1. 集中
+  if (turns === 0) return cast()
+    
+  // 「ぼんやり」の対象選定
+  const dazedTarget = pickByPriority(
+    frontOrAll(state.action!.target.enemies),
+    unit => unit.pre,
+    unit => unit.position === 'center' ? 0 : 1
+  )
+
+  const dazed = (): ActionRequest => dazedTarget
+    ? { key: 'spell', options: { element, spellId: 2 }, target: dazedTarget }
+    : { key: 'cast', options: { element } }
+
+  // 「水の鎧」の対象選定
+  const protectTarget = pickByPriority(
+    frontOrAll(state.action!.target.allies),
+    unit => unit.defense.dr
+  )
+
+  const protect = (): ActionRequest => protectTarget
+    ? { key: 'spell', options: { element, spellId: 3 }, target: protectTarget }
+    : { key: 'cast', options: { element } }
+
+  // 2. 集中時間が1ターン
+  if (turns === 1) {
+    if (skill >= 13 && chance(0.75)) return cast() // 集中継続
+    return enemy(1) // 水弾
+  }
+
+  // 3. 集中時間が2ターン
+  if (skill >= 14) return chance() ? dazed() : protect() // ぼんやり / 水の鎧
+  return dazed() // ぼんやり
 }

@@ -3,6 +3,7 @@
 import { type Combat as State } from '../..'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
+import { chance, pickByPriority, frontOrAll, createSpellActions } from '.'
 
 /**
  * 赤の魔術師の行動パターン
@@ -26,11 +27,38 @@ import { type ActionRequest } from '../../Action/types'
  * 
  */
 export function redSpell(actor: Unit, state: State): ActionRequest {
+  const element = 'red'
+  const skill = actor.spells.level[element]
+  const turns = actor.spells.cast[element]
+  const { cast, self, enemy } = createSpellActions(actor, state, element)
 
-  //
-  // ここに自動行動を実装する
-  //
-  
-  console.log(actor, state)
-  return { key: 'defense', options: {} }
+  // 1. 集中
+  if (turns === 0) return cast()
+
+  // 「ヒロイズム」の対象選定
+  const heroismTarget = pickByPriority(
+    frontOrAll(state.action!.target.allies),
+    unit => unit.attack.level
+  )
+
+  const heroism = (): ActionRequest => heroismTarget
+    ? { key: 'spell', options: { element, spellId: 0 }, target: heroismTarget }
+    : { key: 'cast', options: { element } }
+
+  // 2. 集中時間が1ターン
+  if (turns === 1) {
+    if (skill >= 13 && chance(0.75)) return cast() // 集中継続
+    return chance() ? heroism() : self(1) // ヒロイズム / 閃光
+  }
+
+  // 3. 集中時間が2ターン
+  if (turns === 2) {
+    if (skill >= 15 && chance(0.75)) return cast() // 集中継続
+    if (skill === 14) return self(3)
+    return enemy(2) // 火球
+  }
+
+  // 4. 集中時間が3ターン
+  if (skill >= 16 && chance()) return enemy(5) // 召雷
+  return self(4) // 聖戦
 }
