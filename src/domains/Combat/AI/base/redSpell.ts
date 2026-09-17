@@ -47,13 +47,13 @@ export function redSpell(actor: Unit, state: State): ActionRequest {
 
   // 2. 集中時間が1ターン
   if (turns === 1) {
-    if (skill >= 13 && chance(0.75)) return cast() // 集中継続
+    if (skill >= 13 && chance(0.75) && !actor.aiFrontCommitted) return cast() // 集中継続
     return chance() ? heroism() : self(1) // ヒロイズム / 閃光
   }
 
   // 3. 集中時間が2ターン
   if (turns === 2) {
-    if (skill >= 15 && chance(0.75)) return cast() // 集中継続
+    if (skill >= 15 && chance(0.75) && !actor.aiFrontCommitted) return cast() // 集中継続
     if (skill === 14) return self(3)
     return enemy(2) // 火球
   }

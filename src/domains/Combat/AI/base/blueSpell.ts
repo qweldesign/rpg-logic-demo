@@ -57,7 +57,7 @@ export function blueSpell(actor: Unit, state: State): ActionRequest {
 
   // 2. 集中時間が1ターン
   if (turns === 1) {
-    if (skill >= 13 && chance(0.75)) return cast() // 集中継続
+    if (skill >= 13 && chance(0.75) && !actor.aiFrontCommitted) return cast() // 集中継続
     return enemy(1) // 水弾
   }
 
