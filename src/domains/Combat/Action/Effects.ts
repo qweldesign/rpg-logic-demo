@@ -67,7 +67,7 @@ export class CombatActionEffects {
     }
 
     // ダメージ判定
-    const dmgJudge = rollDmg(actor, target, fullPower)
+    const dmgJudge = rollDmg(actor, target, fullPower, attackJudge.critical)
     results.push({ type: 'dmg', judge: dmgJudge })
 
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める

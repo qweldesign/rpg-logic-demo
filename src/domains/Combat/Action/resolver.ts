@@ -38,8 +38,9 @@ export function judgeDefense(actor: Unit, target: Unit): Omit<DefenseResult, 're
 }
 
 // ダメージの判定結果を返す
-export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower): DmgResult {
-  const { dr, isChain } = target.defense
+export function rollDmg(actor: Unit, target: Unit, fullPower: FullPower, isCritical: boolean = false): DmgResult {
+  let { dr, isChain } = target.defense
+  if (isCritical) dr = 0 // クリティカル時はダメージ貫通
   const { count, mod, rate } = actor.attack.getDmgParams(dr, isChain, fullPower)
   const roll = Math.max(0, Math.floor(getRoll(count, mod) * rate))
   return { roll, success: roll > 0, critical: roll >= 10 }
