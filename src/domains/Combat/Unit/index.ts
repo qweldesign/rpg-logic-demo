@@ -8,7 +8,7 @@ import { CombatStatusBuff as StatusBuff } from './StatusBuff'
 import { CombatStatusDebuff as StatusDebuff } from './StatusDebuff'
 import { type Elements, CombatSpells as Spells } from '../Spells'
 import { type CombatLog as Log } from '../Log'
-import { type TacticTypeKey } from '../AI'
+import { type TacticTypeKey, type TemperTypeKey } from '../AI'
 
 export { DMG_RATE, type DefenseType, type DefenseTarget }
 
@@ -41,6 +41,7 @@ export type CombatUnitModel = {
   equipments: Equipments
   elements: Elements
   tacticType?: TacticTypeKey
+  temperType?: TemperTypeKey
 }
 
 // 戦闘ユニットを司るクラス
@@ -59,10 +60,11 @@ export class CombatUnit {
   public spells: Spells
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
   public tacticType: TacticTypeKey | null // 自動行動タイプ
+  public temperType: TemperTypeKey | null // 気性タイプ
   public aiFrontCommitted: boolean // AI行動用: 前衛への恒久コミット (術戦士B が前衛の味方1人時に前に出た場合等, 一度成立すると以降解除されない)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { name, maxHp, pre, mre, elements, tacticType } = model
+    const { name, maxHp, pre, mre, elements, tacticType, temperType } = model
     this.combatId = combatId
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
@@ -77,6 +79,7 @@ export class CombatUnit {
     this.spells = new Spells(elements)
     this.history = null
     this.tacticType = tacticType ?? null
+    this.temperType = temperType ?? null
     this.aiFrontCommitted = false
   }
 

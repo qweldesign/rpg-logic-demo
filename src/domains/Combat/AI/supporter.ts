@@ -23,10 +23,10 @@ import { SPELL_ELEMENTS } from '../Spells'
  * 
  */
 
-export const supporter: TacticHandler = (actor, state) => {
+export const supporter: TacticHandler = (actor, state, temperType) => {
   // 1. 狂戦士状態
   if (actor.debuff.berserk) {
-    return base(actor, state, 'wing')
+    return base(actor, state, temperType, 'wing')
   }
 
   // 2. 移動 (狂戦士状態の解除後)
@@ -48,5 +48,5 @@ export const supporter: TacticHandler = (actor, state) => {
   if (selected === 'green') return greenSpell(actor, state)
 
   // 安全装置
-  return base(actor, state, 'wing')
+  return base(actor, state, temperType, 'wing')
 }

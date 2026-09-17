@@ -4,15 +4,45 @@ import { Combat as State } from '../..'
 import { type Position, CombatUnit as Unit } from '../../Unit'
 import { type FullPower, type ActionRequest } from '../../Action'
 import { type SpellElement } from '../../Spells'
+import { type TemperTypeKey } from '..'
 
 // 移動先優先順位
 type MovePriority = 'center' | 'wing'
 
 // 行動パラメータ
-const QUICK_ATTACK = 1 / 8
-const ATTACK_MAX = 8
-const DEFENSE_VALUES = [10]
-const COINFLIP_VALUES = [9]
+type ActionParams = {
+  quickAttack: number // 攻撃選択時に指定確率で全力攻撃を実行
+  attackMax: number // 自身の防御目標値がこの値以下なら全力攻撃
+  defenseValues: number[] // 自身の防御目標値がこれらの値なら全力防御
+  coinflipValues: number[] // 自身の防御目標値がこれらの値なら 50% の確率分岐で全力攻撃/全力防御
+}
+
+const ACTION_PARAMS: Record<TemperTypeKey, ActionParams> = {
+  'cautious': { // 慎重: 防御優先
+    quickAttack: 0,
+    attackMax: 7,
+    defenseValues: [9, 10],
+    coinflipValues: [8]
+  },
+  'steady': { // 堅実: バランス
+    quickAttack: 1 / 8,
+    attackMax: 8,
+    defenseValues: [10],
+    coinflipValues: [9]
+  },
+  'bold': { // 大胆: 攻撃優先
+    quickAttack: 1 / 4,
+    attackMax: 9,
+    defenseValues: [],
+    coinflipValues: [10]
+  },
+  'reckless': { // 無謀: 攻撃専心
+    quickAttack: 1 / 2,
+    attackMax: 10,
+    defenseValues: [],
+    coinflipValues: []
+  }
+}
 
 /**
  * 基本形の行動パターン
@@ -35,6 +65,9 @@ const COINFLIP_VALUES = [9]
  *
  * 5. 全力攻撃/全力防御/準備/攻撃/牽制
  * 敵の牽制による修正 (複数なら最大の修正を適用) 込みの自身の防御目標値によって行動分岐 (閾値は params で指定)
+ * 自身の防御目標値が params.attackMax 以下なら全力攻撃, params.defenseValues に含まれるなら全力防御,
+ * params.coinflipValues に含まれるなら 50% の確率分岐で 全力攻撃 か 全力防御 へ
+ * それ以外なら 6. へ
  *
  * 6. 準備/攻撃/牽制
  * 準備が必要な場合は準備
@@ -61,8 +94,9 @@ const COINFLIP_VALUES = [9]
  * 近接対象の中から自身の牽制による修正込みの防御目標値が最も低い相手を選ぶ
  * 
  */
-export function base(actor: Unit, state: State, movePriority: MovePriority): ActionRequest {
+export function base(actor: Unit, state: State, temperType: TemperTypeKey, movePriority: MovePriority): ActionRequest {
   const { availability, target } = state.action!
+  const params = ACTION_PARAMS[temperType]
   const movePriorityArr: Position[] = movePriority === 'center'
     ? ['center', 'right', 'left'] : ['left', 'center', 'right']
 
@@ -99,20 +133,20 @@ export function base(actor: Unit, state: State, movePriority: MovePriority): Act
       return fullAttackRequest(actor, primaryTarget)
     }
     if (actor.attack.ready) { // 武器が準備状態なら, 攻撃
-      return attackRequest(actor, primaryTarget, QUICK_ATTACK)
+      return attackRequest(actor, primaryTarget, params.quickAttack)
     }
   }
 
   // 5. 全力攻撃/全力防御 (窮地の選択)
   // 自身の防御目標値が低い場合は, 全力攻撃か全力防御を選択する
   const selfDefense = worstOwnDefenseTarget(actor, melee)
-  if (selfDefense <= ATTACK_MAX) { // 防御放棄
+  if (selfDefense <= params.attackMax) { // 防御放棄
     return fullAttackRequest(actor, primaryTarget)
   }
-  if (DEFENSE_VALUES.includes(selfDefense)) { // 防御専心
+  if (params.defenseValues.includes(selfDefense)) { // 防御専心
     return { key: 'defense', options: {} }
   }
-  if (COINFLIP_VALUES.includes(selfDefense)) { // どちらか確率分岐
+  if (params.coinflipValues.includes(selfDefense)) { // どちらか確率分岐
     return chance()
       ? fullAttackRequest(actor, primaryTarget)
       : { key: 'defense', options: {} }
@@ -124,7 +158,7 @@ export function base(actor: Unit, state: State, movePriority: MovePriority): Act
   }
   if (targetDefense <= 11 || (!actor.attack.needsReady && targetDefense === 12)) {
     // 攻撃目標の防御目標値が低い (命中の可能性が高い) なら, 攻撃
-    return attackRequest(actor, primaryTarget, QUICK_ATTACK)
+    return attackRequest(actor, primaryTarget, params.quickAttack)
   }
 
   // 7. 攻撃/牽制
@@ -132,7 +166,7 @@ export function base(actor: Unit, state: State, movePriority: MovePriority): Act
   const attackProbability = Math.min(Math.max((14 - attackTarget) * 0.25, 0), 1)
   if (chance(attackProbability)) {
     // 自身の技能値が低い場合, 牽制の効果が得られにくいため, 攻撃を実行する確率を高めにする
-    return attackRequest(actor, primaryTarget, QUICK_ATTACK)
+    return attackRequest(actor, primaryTarget, params.quickAttack)
   }
   return { key: 'feint', options: {}, target: primaryTarget } // 牽制
 }
@@ -143,7 +177,7 @@ export function chance(probability: number = 0.5): boolean {
 }
 
 // 攻撃をリクエストする関数
-// QUICK_ATTACK によって, 一定確率で速攻(全力攻撃)を実行
+// params.quickAttack によって, 一定確率で速攻(全力攻撃)を実行
 function attackRequest(actor: Unit, target: Unit, quickAttack: number): ActionRequest {
   if (chance(quickAttack)) {
     return { key: 'attack', options: { fullPower: pickFullPowerOption(actor, target) }, target: target }
