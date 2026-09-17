@@ -40,8 +40,22 @@ const TACTIC_HANDLERS: Record<TacticTypeKey, TacticHandler> = {
 
 // Combat から呼び出され, 敵 (NPC) の行動を決定する関数
 export function decideAction(actor: Unit, state: State): ActionRequest {
+  // 行動不能状態の場合の共通の行動決定
+  const impaired = decideForImpairedState(actor)
+  if (impaired) return impaired
+
+  // 通常の行動決定
   const tacticType = actor.tacticType ?? 'balanced'
   const temperType = actor.temperType ?? 'bold'
   const handler = TACTIC_HANDLERS[tacticType]
   return handler(actor, state, temperType)
+}
+
+// 行動不能状態の場合の共通の行動決定 (現状は幻惑状態のみを想定)
+// 行動不能状態でなければ null を返し, 通常のハンドラに判断を委ねる
+function decideForImpairedState(actor: Unit): ActionRequest | null {
+  if (actor.debuff.dazed) {
+    return { key: 'defense', options: {} }
+  }
+  return null
 }
