@@ -4,6 +4,7 @@ import { type Side, type CombatUnitModel as UnitModel, CombatUnit as Unit } from
 import { CombatFormation as Formation } from './Formation'
 import { CombatAction as Action } from './Action'
 import { CombatLog as Log } from './Log'
+import { decideAction } from './AI'
 
 // 勝敗結果 (未決着は null)
 export type CombatResult = 'win' | 'lose' | null
@@ -55,6 +56,7 @@ export class Combat {
     this.advanceTurn()
     await this.startTurn()
     await this.runOpeningActions()
+    await this.runEnemyTurn()
     await this.waitForCommand()
   }
 
@@ -98,6 +100,14 @@ export class Combat {
   // 朦朧回復・立ち上がりの完了を待つ
   private async runOpeningActions(): Promise<void> {
     await this.action!.ready
+  }
+
+  // 敵 (NPC) の自動行動ループ
+  private async runEnemyTurn(): Promise<void> {
+    while (this.action!.unlocked && this.actor.side === 'enemy') {
+      const request = decideAction(this.actor, this)
+      await this.action!.execute(request)
+    }
   }
 
   // コマンド入力待機 → 状態更新 → 次のターンへ再帰
