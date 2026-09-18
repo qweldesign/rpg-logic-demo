@@ -148,4 +148,40 @@ export class CombatSpells {
   getDmgMod(dmgType: 0 | 1 | 2, dr: number, isChain: boolean): number {
     return - (dmgType === 2 && isChain ? Math.floor(dr / 2) : dr)
   }
+  
+  // 攻撃 (ダメージ判定) の期待値を取得
+  getExpectedDmg(count: number, dmgType: 0 | 1 | 2, dr: number, isChain: boolean) {
+    const rate = this.getDmgRate(dmgType)
+    const mod = this.getDmgMod(dmgType, dr, isChain)
+    return Math.max(0, Math.floor((count * 3.5 + mod) * rate))
+  }
+
+  getEffectString(actor: Unit, element: SpellElement, spellId: number, target: Unit): string {
+    const spell = SPELL_LIST[element][spellId]
+    const effect = spell.effects ? spell.effects[0] : null
+    if (effect?.kind === 'buff') {
+      return `${SPELL_BUFF_LABELS[effect.target]}UP`
+    } else if (effect?.kind === 'debuff') {
+      return `抵抗目標値: ${target.mre + effect.resistMod} (${SPELL_DEBUFF_LABELS[effect.target]})`
+    } else if (effect?.kind === 'debuffAll') {
+      return '全体を狂戦士状態にする'
+    } else if (effect?.kind === 'trip') {
+      return `防御目標値: ${target.defense.canDefend ? target.defense.getTarget(actor, true).target : '防御不能'} (転倒)`
+    } else if (effect?.kind === 'dmg') {
+      const { dice: count, dmgType } = effect
+      const { dr, isChain } = target.defense
+      return `防御目標値: ${target.defense.canDefend ? target.defense.getTarget(actor, true).target : '防御不能'} (ダメージ ${this.getExpectedDmg(count, dmgType, dr, isChain)} 点)`
+    } else if (effect?.kind === 'dmgAll') {
+      return '敵全体にダメージを与える'
+    } else if (effect?.kind === 'flash') {
+      return '敵全体の目を眩ませる'
+    } else if (effect?.kind === 'heal') {
+      const healed = Math.min(Math.floor(target.health.maxHp * effect.fraction), target.health.injury)
+      return `Hp ${healed} 点回復`
+    } else if (effect?.kind === 'cleanse') {
+      return '味方全体の状態異常を解除する'
+    } else {
+      return '敵の魔法の効果を届きにくくする'
+    }
+  }
 }
