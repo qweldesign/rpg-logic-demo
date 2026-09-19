@@ -47,7 +47,7 @@ export const chapters = [
   },
   {
     order: '03',
-    heading: '魔法',
+    heading: '術法',
     sections: [
       {
         order: '01',
@@ -55,15 +55,7 @@ export const chapters = [
       },
       {
         order: '02',
-        heading: '青の魔法'
-      },
-      {
-        order: '03',
-        heading: '赤の魔法'
-      },
-      {
-        order: '04',
-        heading: '緑の魔法'
+        heading: '効果一覧'
       }
     ]
   }
