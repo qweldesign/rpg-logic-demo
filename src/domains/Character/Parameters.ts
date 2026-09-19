@@ -48,7 +48,7 @@ export class Parameters {
 
   // name と point を指定し, パラメータをセット
   // point: 0 を指定した場合は, パラメータを削除
-  set(name: ParameterKey, point: Point) {
+  private set(name: ParameterKey, point: Point) {
     if (point > 0) {
       this.points.set(name, point)
     } else {
